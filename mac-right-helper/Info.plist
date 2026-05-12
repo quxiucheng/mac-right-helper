@@ -28,25 +28,212 @@
     <array>
         <dict>
             <key>NSMenuItem</key>
-            <dict>
-                <key>default</key>
-                <string>Copy Path</string>
-            </dict>
+            <dict><key>default</key><string>Copy Path</string></dict>
             <key>NSMessage</key>
             <string>handleService</string>
             <key>NSPortName</key>
             <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>copyPath</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Copy File Name</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>copyFileName</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>New File</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>newFile</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Compress</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>compress</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Decompress</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>decompress</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Move To...</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>moveTo</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Copy To...</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>copyTo</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Open in VS Code</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>openInVSCode</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Open in Terminal</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>openInTerminal</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Git Init</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>gitInit</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Git Status</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>gitStatus</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Format JSON</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
             <key>NSRequiredContext</key>
             <dict>
                 <key>NSTextContent</key>
                 <string>FilePath</string>
             </dict>
-            <key>NSSendTypes</key>
-            <array>
-                <string>NSFilenamesPboardType</string>
-            </array>
             <key>NSUserData</key>
-            <string>copyPath</string>
+            <string>formatJSON</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Toggle Hidden Files</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>toggleHiddenFiles</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Make Executable</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>changePermissions</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Create Symlink</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>createSymlink</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Open Parent Directory</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>openParentDirectory</string>
+        </dict>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict><key>default</key><string>Right Helper Preferences</string></dict>
+            <key>NSMessage</key>
+            <string>handleService</string>
+            <key>NSPortName</key>
+            <string>mac-right-helper</string>
+            <key>NSSendTypes</key>
+            <array><string>NSFilenamesPboardType</string></array>
+            <key>NSUserData</key>
+            <string>openPreferences</string>
         </dict>
     </array>
 </dict>
