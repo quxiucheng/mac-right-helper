@@ -23,14 +23,21 @@ enum ActionDispatcher {
         "changePermissions": ChangePermissionsAction(),
         "createSymlink": CreateSymlinkAction(),
         "openParentDirectory": OpenParentDirectoryAction(),
+        "openPreferences": OpenPreferencesAction(),
     ]
 
     static func handler(for actionID: String) -> ActionHandler? {
-        return handlers[actionID]
+        if let builtIn = handlers[actionID] {
+            return builtIn
+        }
+        if let script = ConfigManager.shared.config.customScripts.first(where: { $0.id == actionID }) {
+            return CustomScriptHandler(script: script)
+        }
+        return nil
     }
 
     static func dispatch(actionID: String, filePaths: [String]) async {
-        guard let handler = handlers[actionID] else {
+        guard let handler = handler(for: actionID) else {
             print("No handler for action: \(actionID)")
             return
         }
@@ -40,10 +47,36 @@ enum ActionDispatcher {
             await MainActor.run {
                 let alert = NSAlert()
                 alert.messageText = "Action Failed"
-                alert.informativeText = error.localizedDescription
+                alert.informativeText = "\(error)"
                 alert.alertStyle = .warning
                 alert.runModal()
             }
+        }
+    }
+}
+
+struct CustomScriptHandler: ActionHandler {
+    let script: CustomScript
+
+    func handle(filePaths: [String]) async throws {
+        let executor = ScriptExecutor()
+        switch script.type {
+        case .shell:
+            _ = try await executor.executeShell(script: script.source, arguments: filePaths)
+        case .python:
+            _ = try await executor.executePython(script: script.source, arguments: filePaths)
+        case .appleScript:
+            _ = try await executor.executeAppleScript(source: script.source)
+        }
+    }
+}
+
+struct OpenPreferencesAction: ActionHandler {
+    func handle(filePaths: [String]) async throws {
+        await MainActor.run {
+            let controller = PreferencesWindowController()
+            controller.showWindow(nil)
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 }
