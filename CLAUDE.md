@@ -2,13 +2,63 @@
 
 本文档为 Claude Code (claude.ai/code) 在本仓库中工作时提供指导。
 
-## 项目概述
+## 项目介绍
 
-mac-right-helper 是一个基于 Swift 构建的 macOS Finder 右键扩展工具。它将文件操作、开发工具、系统增强功能和自定义脚本添加到 macOS 的"服务"菜单（Finder 右键）中。该应用以后台代理 (`LSUIElement`) 的形式运行，带有状态栏图标和偏好设置窗口。
+mac-right-helper 是一个 macOS Finder 右键扩展工具，使用 Swift 开发。它通过 macOS 的 `NSServices` 机制将一系列实用功能注入 Finder 的"服务"菜单，让用户在右键文件/文件夹时即可执行常用操作，无需打开终端或额外的应用程序。
 
-Finder 集成功能通过在 `Info.plist` 中声明的 `NSServices` 实现 —— 没有单独的 Finder Sync 扩展目标。所有服务都通过 `AppDelegate.handleService(_:userData:)` 进行路由。
+### 核心能力
 
-最低支持的 macOS 版本：12.0 (Monterey)。
+- **文件操作**：复制路径/文件名、新建文件、压缩/解压、移动/复制到指定目录
+- **开发工具**：在 VS Code 或 Terminal 中打开、Git 初始化/状态查看、JSON 格式化
+- **系统增强**：切换隐藏文件显示、修改文件权限（chmod +x）、创建符号链接、打开父目录
+- **自定义脚本**：用户可配置 Shell、Python、AppleScript 脚本，扩展右键菜单
+
+### 技术背景
+
+- 应用以 `LSUIElement` 后台代理运行，无 Dock 图标，仅通过状态栏图标提供入口
+- Finder 集成完全依赖 `Info.plist` 中的 `NSServices` 声明，无需独立的 Finder Sync Extension 目标
+- 最低支持 macOS 12.0 (Monterey)
+- 使用 `NSUpdateDynamicServices()` 在运行时热重载服务列表，配置更改后无需重启应用
+
+## 目录结构
+
+```
+mac-right-helper/
+├── main.swift                    # 应用入口，手动引导 NSApplication
+├── AppDelegate.swift             # NSApplicationDelegate，服务路由与权限检查
+├── Info.plist                    # NSServices 注册、Bundle 配置
+├── Models/
+│   ├── AppConfig.swift           # 配置模型（Codable）：内置项 + 自定义脚本
+│   └── CustomScript.swift        # 自定义脚本模型：id、类型、源码等
+├── Core/
+│   ├── ConfigManager.swift       # 配置持久化单例（UserDefaults）
+│   ├── ScriptExecutor.swift      # Shell/Python/AppleScript 异步执行器
+│   └── PermissionManager.swift   # 完全磁盘访问 + 辅助功能权限检查
+├── Actions/
+│   ├── ActionHandler.swift       # ActionHandler 协议定义
+│   ├── ActionDispatcher.swift    # 内置操作注册表 + 自定义脚本解析 + 错误展示
+│   ├── CustomScriptHandler.swift # 自定义脚本 ActionHandler 包装器
+│   ├── OpenPreferencesAction.swift # 打开偏好设置窗口
+│   ├── FileActions.swift         # 文件操作处理器（复制、压缩、移动等）
+│   ├── DevActions.swift          # 开发工具处理器（VS Code、Git、JSON 等）
+│   └── SystemActions.swift       # 系统增强处理器（隐藏文件、chmod 等）
+├── UI/
+│   ├── StatusBarController.swift # 状态栏图标与菜单（左键/右键区分）
+│   └── PreferencesWindowController.swift # 偏好设置窗口（NSTableView）
+└── Utils/
+    └── PasteboardReader.swift    # 从 NSPasteboard 提取文件路径
+
+mac-right-helperTests/            # XCTest 测试目标
+├── ConfigManagerTests.swift
+├── PasteboardReaderTests.swift
+├── ScriptExecutorTests.swift
+├── PermissionManagerTests.swift
+├── ActionDispatcherTests.swift
+├── CustomScriptHandlerTests.swift
+└── OpenPreferencesActionTests.swift
+
+build.sh                          # Release 构建脚本
+```
 
 ## 构建与测试命令
 
@@ -92,13 +142,44 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
   2. 在 `ActionDispatcher.handlers` 中注册它
   3. 在 `Info.plist` 的 `NSServices` 下添加相应的 `<dict>` 条目
 
-## 测试说明
+## 测试规范
 
-- 测试使用 `@testable import mac_right_helper`。
-- 测试覆盖范围包括：`ConfigManager`（UserDefaults 往返）、`PasteboardReader`（从剪贴板提取路径）、`ScriptExecutor`（Shell 执行和失败处理）和 `PermissionManager`（状态枚举值）。
-- `ConfigManagerTests` 在 `setUp` 中清除 `UserDefaults.standard` 中的 `"RightHelperMenuConfig"`。
-- `PasteboardReaderTests` 创建一个命名的 `NSPasteboard` ("test")，以避免干扰系统剪贴板。
-- 仓库中没有 Xcode 项目；运行测试需要一个配置了 scheme 的本地 `.xcodeproj`。
+### 基本要求
+
+- **每次代码变更后必须编写对应的单元测试**。新增功能、修复 bug、重构代码均不例外。
+- 测试目标名为 `mac-right-helperTests`，测试类使用 `@testable import mac_right_helper`。
+- 测试类命名规则：`{被测类型名}Tests`，继承 `XCTestCase`。
+- 测试方法命名规则：`test{被测行为描述}`，如 `testSaveAndLoadConfig`、`testHandleShellScriptFailure`。
+
+### 测试组织
+
+- 每个源文件对应一个测试文件，存放在 `mac-right-helperTests/` 根目录下（目前不分子目录）。
+- 一个测试方法只验证**一个行为点**，避免多断言堆叠。
+- 对正常路径、边界条件、错误路径分别编写独立测试。
+
+### 测试隔离
+
+- **UserDefaults**：`ConfigManagerTests` 在 `setUp` 中清除 `UserDefaults.standard` 的目标键，避免测试间状态污染。
+- **剪贴板**：`PasteboardReaderTests` 使用命名 `NSPasteboard`（如 `"test"`），禁止直接操作系统默认剪贴板。
+- **文件系统**：临时测试文件应放在 `/tmp/` 并在测试结束后清理；避免写入用户真实目录。
+- **权限相关**：`PermissionManager` 的状态依赖于外部环境，测试只验证返回值属于有效枚举范围，不做硬性断言。
+
+### 异步测试
+
+- 使用 `async` 测试方法直接调用 `async throws` 的 API，XCTest 会自动等待完成。
+- 对期望抛出异常的路径，使用 `do/try/catch` 并在未抛出时调用 `XCTFail`。
+
+### UI 测试
+
+- 由于项目以 `LSUIElement` 运行且 UI 层较薄，目前以单元测试为主。
+- UI 相关类型（如 `OpenPreferencesAction`）的测试只需验证不抛出异常即可，不做窗口状态断言。
+
+### 覆盖率目标
+
+- 所有 `ActionHandler` 实现至少覆盖：空输入处理、正常输入、错误路径（如脚本执行失败）。
+- `ActionDispatcher` 至少覆盖：内置 action 解析、自定义脚本解析、未知 action 返回 nil。
+- `ScriptExecutor` 至少覆盖：Shell/Python/AppleScript 成功执行、Shell 失败抛出。
+- `ConfigManager` 至少覆盖：默认配置加载、配置保存与重新加载、自定义脚本往返。
 
 ## 编码规范
 
