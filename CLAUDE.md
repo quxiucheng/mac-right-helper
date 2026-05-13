@@ -22,6 +22,16 @@ Minimum supported macOS: 12.0 (Monterey).
 xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'
 ```
 
+**Run a single test class:**
+```bash
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-testing mac-right-helperTests/ConfigManagerTests
+```
+
+**Run a single test method:**
+```bash
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-testing mac-right-helperTests/ConfigManagerTests/testSaveAndLoadConfig
+```
+
 **Build (Release via xcodebuild):**
 ```bash
 xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration Release build
@@ -33,9 +43,9 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 
 ### Entry Point & Service Routing
 
-- `main.swift` bootstraps `NSApplication` with `AppDelegate`.
+- `main.swift` manually bootstraps `NSApplication.shared` with `AppDelegate` and calls `app.run()`. It does **not** use `@main` or `NSApplicationMain`.
 - `AppDelegate.applicationDidFinishLaunching` initializes `StatusBarController`, checks permissions, and registers dynamic services via `NSUpdateDynamicServices()`.
-- `AppDelegate.handleService(_:userData:)` is the **single entry point for all Finder right-click actions**. It receives an `NSPasteboard`, extracts file paths via `PasteboardReader`, and dispatches to `ActionDispatcher` using `userData` as the action ID.
+- `AppDelegate.handleService(_:userData:)` is the **single entry point for all Finder right-click actions**. It receives an `NSPasteboard`, extracts file paths via `PasteboardReader`, and dispatches to `ActionDispatcher` using `userData` as the action ID. Because `handleService` is a synchronous NSServices callback, it internally wraps the async `ActionDispatcher.dispatch` in a `Task`.
 
 ### Configuration System
 
@@ -48,8 +58,7 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 
 ### Action Dispatch System
 
-- `ActionDispatcher` maintains a static registry of built-in `ActionHandler` instances keyed by action ID (e.g., `"copyPath"`, `"openInVSCode"`).
-- For custom scripts, it dynamically constructs a `CustomScriptHandler` by looking up the script ID in `ConfigManager.shared.config.customScripts`.
+- `ActionDispatcher` maintains a **static compile-time registry** (`handlers: [String: ActionHandler]`) of built-in action instances. Custom scripts are resolved at runtime by looking up the script ID in `ConfigManager.shared.config.customScripts` and constructing a `CustomScriptHandler`.
 - All handlers implement `ActionHandler.handle(filePaths:)` and run `async`. Errors are surfaced to the user via `NSAlert` on the main actor.
 - Built-in actions are grouped into:
   - `FileActions.swift` — copy path/name, new file, compress/decompress, move/copy to
@@ -71,8 +80,8 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 
 ### UI Layer
 
-- `StatusBarController` — `NSStatusBar` item with system symbol `hand.point.up.left`. Left-click opens preferences; right-click shows the menu (Preferences, Reload Services, Quit).
-- `PreferencesWindowController` / `PreferencesViewController` — minimal `NSTableView`-based preferences window for listing menu items. Not yet fully wired for drag-to-reorder or checkbox toggles.
+- `StatusBarController` — `NSStatusBar` item with system symbol `hand.point.up.left`. Left-click opens the preferences window directly; right-click shows the menu (Preferences, Reload Services, Quit). This is implemented by calling `sendAction(on: [.leftMouseUp, .rightMouseUp])` and inspecting `NSApp.currentEvent!.type` in the click handler.
+- `PreferencesWindowController` / `PreferencesViewController` — minimal `NSTableView`-based preferences window for listing menu items. It is not yet fully wired for drag-to-reorder or checkbox toggles; the table currently only displays item names.
 
 ### Info.plist & Services Registration
 
@@ -86,6 +95,7 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 ## Test Notes
 
 - Tests use `@testable import mac_right_helper`.
+- Test coverage spans: `ConfigManager` (UserDefaults round-trip), `PasteboardReader` (path extraction from pasteboard), `ScriptExecutor` (shell execution and failure handling), and `PermissionManager` (status enum values).
 - `ConfigManagerTests` clears `UserDefaults.standard` for `"RightHelperMenuConfig"` in `setUp`.
 - `PasteboardReaderTests` creates a named `NSPasteboard` ("test") to avoid interfering with the system pasteboard.
 - There is no Xcode project in the repository; running tests requires a local `.xcodeproj` with the scheme configured.
