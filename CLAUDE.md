@@ -99,3 +99,56 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 - `ConfigManagerTests` 在 `setUp` 中清除 `UserDefaults.standard` 中的 `"RightHelperMenuConfig"`。
 - `PasteboardReaderTests` 创建一个命名的 `NSPasteboard` ("test")，以避免干扰系统剪贴板。
 - 仓库中没有 Xcode 项目；运行测试需要一个配置了 scheme 的本地 `.xcodeproj`。
+
+## 编码规范
+
+### 文件组织
+
+- 按功能将文件放入子目录：`Models/`、`Core/`、`Actions/`、`UI/`、`Utils/`。
+- 每个 Swift 文件只应包含单一职责的类型或逻辑。
+- **禁止**将未使用的模型或死代码留在仓库中。如果类型当前没有被引用，应删除它。
+
+### 命名规范
+
+- 类型名使用 `PascalCase`（如 `CopyPathAction`）。
+- 方法、变量、属性使用 `camelCase`（如 `handle(filePaths:)`）。
+- 协议名使用名词或 `-ing` 形式（如 `ActionHandler`）。
+- 枚举的 case 使用 `camelCase`（如 `fileOperations`）。
+
+### 类型设计
+
+- **优先使用 `struct`** 而非 `class`，除非需要引用语义或继承。所有内置操作处理器（`ActionHandler` 的实现）都应为 `struct`。
+- 单例使用 `static let shared` 模式（如 `ConfigManager.shared`）。
+- 使用 `enum` 承载命名空间或状态分类（如 `MenuGroup`、`PermissionStatus`）。
+
+### 协议与实现分离
+
+- 协议定义应存放在独立的文件中（如 `ActionHandler.swift` 只包含协议）。
+- 调度器、通用 Handler 实现应与协议分开存放。
+- 每个具体的 `ActionHandler` 实现按功能分组到对应的 `Actions/*.swift` 文件中。
+
+### 错误处理
+
+- 异步操作统一使用 `async throws` 签名。
+- 错误向上抛给调用方，由 `ActionDispatcher.dispatch` 统一通过 `NSAlert` 在主线程展示。
+- 在 `ActionHandler.handle(filePaths:)` 内部，对空输入使用 `guard let ... else { return }` 尽早返回，而非抛出错误。
+
+### UI 与主线程
+
+- 所有 UI 操作（如 `NSOpenPanel.runModal()`、`NSAlert.runModal()`）必须在主线程执行，使用 `await MainActor.run { ... }` 包装。
+- 状态栏、窗口控制器等 UI 类的初始化放在 `AppDelegate.applicationDidFinishLaunching` 中完成。
+
+### 访问控制
+
+- 不添加不必要的访问控制修饰符；默认 `internal` 即可。
+- 仅在需要隐藏实现细节时使用 `private`（如 `StatusBarController` 中的 `setupMenu()`）。
+
+### 导入语句
+
+- 只导入实际需要的模块。`Foundation` 是基础；需要 AppKit 时才导入 `AppKit`。
+- 避免使用 `import Cocoa` 这种大包导入，应显式导入 `AppKit`。
+
+### 入口点
+
+- `main.swift` 是唯一的应用入口点，手动引导 `NSApplication.shared`。
+- `AppDelegate` **不得**使用 `@main` 注解，避免与 `main.swift` 的引导逻辑冲突。
