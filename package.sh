@@ -19,18 +19,14 @@ CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY:--}"
 
 echo "=== Packaging ${APP_NAME}.app ==="
 
-# 1. Collect source files
-declare -a SWIFT_FILES
-while IFS= read -r -d '' file; do
-    SWIFT_FILES+=("$file")
-done < <(find "${SRC_DIR}" -name "*.swift" -print0)
-
-if [ ${#SWIFT_FILES[@]} -eq 0 ]; then
+# 1. Check for source files
+SWIFT_COUNT=$(find "${SRC_DIR}" -name "*.swift" | wc -l | tr -d ' ')
+if [ "$SWIFT_COUNT" -eq 0 ]; then
     echo "Error: No Swift source files found in ${SRC_DIR}"
     exit 1
 fi
 
-echo "Found ${#SWIFT_FILES[@]} Swift source files"
+echo "Found ${SWIFT_COUNT} Swift source files"
 
 # 2. Prepare build directory
 rm -rf "${APP_BUNDLE}"
@@ -39,15 +35,14 @@ mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
 # 3. Compile binary
 echo "Compiling binary..."
-swiftc \
+find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
     -O \
     -whole-module-optimization \
     -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
     -o "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}" \
     -framework Foundation \
     -framework AppKit \
-    -framework ApplicationServices \
-    "${SWIFT_FILES[@]}"
+    -framework ApplicationServices
 
 # 4. Copy Info.plist and substitute variables
 echo "Copying Info.plist..."
