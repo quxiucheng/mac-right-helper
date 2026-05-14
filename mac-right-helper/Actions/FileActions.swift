@@ -54,7 +54,7 @@ struct DecompressAction: ActionHandler {
 struct MoveToAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard let path = filePaths.first else { return }
-        let dest = await MainActor.run {
+        let dest = await MainActor.run { () -> URL? in
             let panel = NSOpenPanel()
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
@@ -73,7 +73,7 @@ struct MoveToAction: ActionHandler {
 struct CopyToAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard let path = filePaths.first else { return }
-        let dest = await MainActor.run {
+        let dest = await MainActor.run { () -> URL? in
             let panel = NSOpenPanel()
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
