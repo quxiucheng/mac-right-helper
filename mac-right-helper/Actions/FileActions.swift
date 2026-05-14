@@ -54,17 +54,16 @@ struct DecompressAction: ActionHandler {
 struct MoveToAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard let path = filePaths.first else { return }
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.message = "Choose destination folder"
-
-        let response = await MainActor.run {
-            return panel.runModal()
+        let dest = await MainActor.run {
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.allowsMultipleSelection = false
+            panel.message = "Choose destination folder"
+            guard panel.runModal() == .OK else { return nil }
+            return panel.url
         }
-
-        guard response == .OK, let dest = panel.url else { return }
+        guard let dest = dest else { return }
         let name = URL(fileURLWithPath: path).lastPathComponent
         let destPath = dest.appendingPathComponent(name).path
         try FileManager.default.moveItem(atPath: path, toPath: destPath)
@@ -74,17 +73,16 @@ struct MoveToAction: ActionHandler {
 struct CopyToAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard let path = filePaths.first else { return }
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.message = "Choose destination folder"
-
-        let response = await MainActor.run {
-            return panel.runModal()
+        let dest = await MainActor.run {
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.allowsMultipleSelection = false
+            panel.message = "Choose destination folder"
+            guard panel.runModal() == .OK else { return nil }
+            return panel.url
         }
-
-        guard response == .OK, let dest = panel.url else { return }
+        guard let dest = dest else { return }
         let name = URL(fileURLWithPath: path).lastPathComponent
         let destPath = dest.appendingPathComponent(name).path
         try FileManager.default.copyItem(atPath: path, toPath: destPath)

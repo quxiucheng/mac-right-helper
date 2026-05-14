@@ -43,7 +43,9 @@ class PreferencesViewController: NSViewController {
     }
 
     private func sortedItems() -> [(key: String, config: AppConfig.BuiltinItemConfig)] {
-        return configManager.config.builtinItems.sorted { $0.value.weight < $1.value.weight }
+        return configManager.config.builtinItems
+            .sorted { $0.value.weight < $1.value.weight }
+            .map { (key: $0.key, config: $0.value) }
     }
 }
 

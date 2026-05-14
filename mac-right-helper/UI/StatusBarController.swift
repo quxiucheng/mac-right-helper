@@ -5,7 +5,7 @@ class StatusBarController {
     private var preferencesWindowController: PreferencesWindowController?
 
     init() {
-        statusItem = NSStatusBar.shared.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         setupMenu()
     }
 

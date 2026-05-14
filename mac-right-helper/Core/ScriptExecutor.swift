@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 enum ScriptExecutionError: Error {
     case executionFailed(stderr: String, code: Int32)
@@ -82,7 +83,7 @@ class ScriptExecutor {
                     let message = error["NSAppleScriptErrorMessage"] as? String ?? "Unknown AppleScript error"
                     continuation.resume(throwing: ScriptExecutionError.executionFailed(stderr: message, code: 1))
                 } else {
-                    let output = result?.stringValue ?? ""
+                    let output = result.stringValue ?? ""
                     continuation.resume(returning: ScriptResult(stdout: output, stderr: "", exitCode: 0))
                 }
             }
