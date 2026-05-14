@@ -35,19 +35,23 @@ mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
 # 3. Compile binary
 echo "Compiling binary..."
+ARCH=$(uname -m)
 find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
     -O \
     -whole-module-optimization \
-    -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
+    -target "${ARCH}-apple-macosx${MIN_MACOS_VERSION}" \
     -o "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}" \
     -framework Foundation \
     -framework AppKit \
     -framework ApplicationServices
 
+chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+
 # 4. Copy Info.plist and substitute variables
 echo "Copying Info.plist..."
 if [ -f "${SRC_DIR}/Info.plist" ]; then
-    cp "${SRC_DIR}/Info.plist" "${APP_BUNDLE}/Contents/Info.plist"
+    sed -e "s/\$(EXECUTABLE_NAME)/${APP_NAME}/g" \
+        "${SRC_DIR}/Info.plist" > "${APP_BUNDLE}/Contents/Info.plist"
 else
     echo "Warning: Info.plist not found at ${SRC_DIR}/Info.plist, generating default..."
     cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
