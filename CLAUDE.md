@@ -1,235 +1,231 @@
-# CLAUDE.md
+# mac-right-helper 开发指南
 
-本文档为 Claude Code (claude.ai/code) 在本仓库中工作时提供指导。
+## 项目概述
 
-## 项目介绍
+mac-right-helper 是一个 macOS Finder 右键扩展工具，通过 macOS 的 `NSServices` 机制将实用操作注入 Finder 的"服务"菜单。用户无需离开 Finder 即可执行常用文件操作、开发工具和系统增强功能。
 
-mac-right-helper 是一个 macOS Finder 右键扩展工具，使用 Swift 开发。它通过 macOS 的 `NSServices` 机制将一系列实用功能注入 Finder 的"服务"菜单，让用户在右键文件/文件夹时即可执行常用操作，无需打开终端或额外的应用程序。
-
-### 核心能力
-
-- **文件操作**：复制路径/文件名、新建文件、压缩/解压、移动/复制到指定目录
-- **开发工具**：在 VS Code 或 Terminal 中打开、Git 初始化/状态查看、JSON 格式化
-- **系统增强**：切换隐藏文件显示、修改文件权限（chmod +x）、创建符号链接、打开父目录
-- **自定义脚本**：用户可配置 Shell、Python、AppleScript 脚本，扩展右键菜单
-
-### 技术背景
-
-- 应用以 `LSUIElement` 后台代理运行，无 Dock 图标，仅通过状态栏图标提供入口
-- Finder 集成完全依赖 `Info.plist` 中的 `NSServices` 声明，无需独立的 Finder Sync Extension 目标
-- 最低支持 macOS 12.0 (Monterey)
-- 使用 `NSUpdateDynamicServices()` 在运行时热重载服务列表，配置更改后无需重启应用
-
-## 目录结构
+## 架构
 
 ```
-mac-right-helper/
-├── main.swift                    # 应用入口，手动引导 NSApplication
-├── AppDelegate.swift             # NSApplicationDelegate，服务路由与权限检查
-├── Info.plist                    # NSServices 注册、Bundle 配置
-├── Models/
-│   ├── AppConfig.swift           # 配置模型（Codable）：内置项 + 自定义脚本
-│   └── CustomScript.swift        # 自定义脚本模型：id、类型、源码等
-├── Core/
-│   ├── ConfigManager.swift       # 配置持久化单例（UserDefaults）
-│   ├── ScriptExecutor.swift      # Shell/Python/AppleScript 异步执行器
-│   └── PermissionManager.swift   # 完全磁盘访问 + 辅助功能权限检查
-├── Actions/
-│   ├── ActionHandler.swift       # ActionHandler 协议定义
-│   ├── ActionDispatcher.swift    # 内置操作注册表 + 自定义脚本解析 + 错误展示
-│   ├── CustomScriptHandler.swift # 自定义脚本 ActionHandler 包装器
-│   ├── OpenPreferencesAction.swift # 打开偏好设置窗口
-│   ├── FileActions.swift         # 文件操作处理器（复制、压缩、移动等）
-│   ├── DevActions.swift          # 开发工具处理器（VS Code、Git、JSON 等）
-│   └── SystemActions.swift       # 系统增强处理器（隐藏文件、chmod 等）
-├── UI/
-│   ├── StatusBarController.swift # 状态栏图标与菜单（左键/右键区分）
-│   └── PreferencesWindowController.swift # 偏好设置窗口（NSTableView）
-└── Utils/
-    └── PasteboardReader.swift    # 从 NSPasteboard 提取文件路径
-
-mac-right-helperTests/            # XCTest 测试目标
-├── ConfigManagerTests.swift
-├── PasteboardReaderTests.swift
-├── ScriptExecutorTests.swift
-├── PermissionManagerTests.swift
-├── ActionDispatcherTests.swift
-├── CustomScriptHandlerTests.swift
-└── OpenPreferencesActionTests.swift
-
-build.sh                          # Release 构建脚本
+┌─────────────────────────────────────────┐
+│              main.swift                 │  ← 手动引导 NSApplication 入口
+├─────────────────────────────────────────┤
+│           AppDelegate.swift             │  ← 服务路由与权限检查
+├─────────────────────────────────────────┤
+│              Info.plist                 │  ← NSServices 声明
+├─────────────────────────────────────────┤
+│              Models/                    │
+│           ├── AppConfig.swift           │  ← 配置模型（Codable）
+│           └── CustomScript.swift        │  ← 自定义脚本模型
+├─────────────────────────────────────────┤
+│               Core/                     │
+│         ├── ConfigManager.swift         │  ← UserDefaults 单例持久化
+│         ├── ScriptExecutor.swift        │  ← 异步 Shell/Python/AppleScript 执行器
+│         └── PermissionManager.swift     │  ← 完全磁盘访问 + 辅助功能权限检查
+├─────────────────────────────────────────┤
+│              Actions/                   │
+│         ├── ActionHandler.swift         │  ← 协议定义
+│         ├── ActionDispatcher.swift      │  ← 注册表 + 分发 + 错误展示
+│         ├── CustomScriptHandler.swift   │  ← 自定义脚本包装器
+│         ├── OpenPreferencesAction.swift │  ← 打开偏好设置窗口
+│         ├── FileActions.swift           │  ← 文件操作（复制、压缩、移动等）
+│         ├── DevActions.swift            │  ← 开发工具（VS Code、Git、JSON 等）
+│         └── SystemActions.swift         │  ← 系统增强（隐藏文件、chmod 等）
+├─────────────────────────────────────────┤
+│                 UI/                     │
+│       ├── StatusBarController.swift     │  ← 状态栏图标（左键/右键区分）
+│       └── PreferencesWindowController.swift  ← 偏好设置窗口（NSTableView）
+├─────────────────────────────────────────┤
+│               Utils/                    │
+│         └── PasteboardReader.swift      │  ← 从 NSPasteboard 提取文件路径
+├─────────────────────────────────────────┤
+│           mac-right-helperTests/        │  ← XCTest 测试目标
+└─────────────────────────────────────────┘
 ```
 
-## 构建与测试命令
+### 核心设计原则
 
-**构建 (Release)：**
-```bash
-./build.sh
+**`Actions/` 中的 Handler 是纯值类型。** 所有内置的 `ActionHandler` 实现都应为 `struct`。它们接收文件路径，通过 `ScriptExecutor` 或 API 执行任务，不持有任何可变共享状态。
+
+**`ActionDispatcher` 是唯一分发点。** 它将 `userData`（操作 ID）解析为静态内置注册表中的 Handler，或在运行时构造 `CustomScriptHandler`。所有错误统一在主线程通过 `NSAlert` 展示。
+
+**`Core/` 不得导入 `Actions/` 或 `UI/`。** 配置、脚本执行、权限检查是与框架无关的基础能力。依赖方向如下：
+```
+main.swift → AppDelegate → UI/, Actions/, Core/
+Actions/*  → Core/       （不得依赖其他 Action 组或 UI）
+UI/*       → Core/       （不得依赖 Actions/）
+Core/      → 仅 Foundation/AppKit
 ```
 
-**构建并测试 (需要 Xcode 项目)：**
-```bash
-xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'
+**配置变更支持热重载。** `ConfigManager` 发出 `RightHelperConfigChanged` 通知，`AppDelegate` 调用 `NSUpdateDynamicServices()`，Finder 菜单无需重启应用即可更新。
+
+### 核心类型
+
+- **`ActionHandler`** — 内置或自定义操作（异步 `handle(filePaths:)`）
+- **`ActionDispatcher`** — 解析操作 ID → Handler，通过 `NSAlert` 展示错误
+- **`ConfigManager`** — 单例，将 `AppConfig` 持久化到 `UserDefaults`
+- **`ScriptExecutor`** — 异步 Shell/Python/AppleScript 执行器
+- **`PasteboardReader`** — 从 `NSPasteboard` 提取文件路径
+
+## 开发规则
+
+### 1. ActionHandler 必须是值类型
+
+所有内置 Handler 都应使用 `struct`。Handler 调用之间不共享可变状态。
+
+```swift
+// 错误 — 带可变状态的 class
+class CopyPathAction: ActionHandler {
+    var count = 0
+    func handle(filePaths: [String]) async throws { count += 1 }
+}
+
+// 正确 — 无状态 struct
+struct CopyPathAction: ActionHandler {
+    func handle(filePaths: [String]) async throws { /* ... */ }
+}
 ```
 
-**运行单个测试类：**
-```bash
-xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-testing mac-right-helperTests/ConfigManagerTests
+### 2. 错误必须在主线程通过 ActionDispatcher 展示
+
+`ActionHandler` 内部不得直接显示 `NSAlert`。应抛出错误，由 `ActionDispatcher` 统一处理。
+
+```swift
+// 错误 — Handler 直接展示 UI
+struct BadAction: ActionHandler {
+    func handle(filePaths: [String]) async throws {
+        if filePaths.isEmpty {
+            await MainActor.run {
+                NSAlert(error: MyError.empty).runModal()  // 禁止
+            }
+        }
+    }
+}
+
+// 正确 — 抛出，让分发器处理
+struct GoodAction: ActionHandler {
+    func handle(filePaths: [String]) async throws {
+        guard !filePaths.isEmpty else { throw MyError.empty }
+    }
+}
 ```
 
-**运行单个测试方法：**
-```bash
-xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-testing mac-right-helperTests/ConfigManagerTests/testSaveAndLoadConfig
+### 3. 空输入应尽早返回，不抛异常
+
+在 `handle(filePaths:)` 内部，使用 `guard` 对空输入静默返回。抛出异常仅用于真正的失败场景。
+
+```swift
+// 错误 — 空输入抛异常
+func handle(filePaths: [String]) async throws {
+    guard !filePaths.isEmpty else { throw ActionError.noSelection }
+}
+
+// 正确 — 静默无操作
+func handle(filePaths: [String]) async throws {
+    guard !filePaths.isEmpty else { return }
+}
 ```
 
-**构建 (Release 通过 xcodebuild)：**
-```bash
-xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration Release build
+### 4. 新增内置操作需要三步
+
+1. 在合适的 `Actions/*.swift` 文件中实现 `ActionHandler`
+2. 在 `ActionDispatcher.handlers` 中注册
+3. 在 `Info.plist` 的 `NSServices` 下添加对应的 `<dict>` 条目
+
+遗漏第 3 步将导致 Finder 菜单中不显示该选项。
+
+### 5. UI 操作必须使用 `await MainActor.run`
+
+任何 `NSAlert`、`NSOpenPanel` 或窗口操作都必须在主线程执行。
+
+```swift
+// 错误 — 可能在后台线程执行
+NSAlert(error: err).runModal()
+
+// 正确
+await MainActor.run {
+    NSAlert(error: err).runModal()
+}
 ```
 
-**注意：** Xcode 项目文件 (`.xcodeproj`) 不在本仓库中跟踪。构建脚本假设在本地 Xcode 项目中存在一个名为 `mac-right-helper` 的 scheme。
+### 6. 测试隔离是强制的
 
-## 高层架构
+- `ConfigManagerTests` 在 `setUp` 中清除 `UserDefaults` 的目标键
+- `PasteboardReaderTests` 使用命名 `NSPasteboard`（如 `"test"`）；禁止操作系统默认剪贴板
+- 临时测试文件写入 `/tmp/`，并在 `tearDown` 中清理
 
-### 入口点与服务路由
+## 代码风格
 
-- `main.swift` 手动引导 `NSApplication.shared` 并设置 `AppDelegate`，然后调用 `app.run()`。它**不使用** `@main` 或 `NSApplicationMain`。
-- `AppDelegate.applicationDidFinishLaunching` 初始化 `StatusBarController`，检查权限，并通过 `NSUpdateDynamicServices()` 注册动态服务。
-- `AppDelegate.handleService(_:userData:)` 是**所有 Finder 右键操作的单一入口点**。它接收一个 `NSPasteboard`，通过 `PasteboardReader` 提取文件路径，并使用 `userData` 作为操作 ID 分派给 `ActionDispatcher`。由于 `handleService` 是一个同步的 NSServices 回调，它在内部将异步的 `ActionDispatcher.dispatch` 包装在一个 `Task` 中。
+- 遵循标准 Swift 规范（尽可能使用 `swift-format`）
+- 除非需要引用语义，否则**优先使用 `struct` 而非 `class`**
+- 类型名使用 `PascalCase`，方法/变量使用 `camelCase`
+- 避免使用 `import Cocoa`；显式导入 `Foundation` 或 `AppKit`
+- 保持函数聚焦；超过约 60 行时提取辅助函数
+- 单例模式：`static let shared`
+- `main.swift` 是唯一入口点；`AppDelegate` 不得使用 `@main`
 
-### 配置系统
-
-- `ConfigManager` 是一个单例，它将 `AppConfig` 持久化到 `UserDefaults` 中，键名为 `RightHelperMenuConfig`。
-- `AppConfig` 是一个 `Codable` 结构体，包含：
-  - `builtinItems`：操作 ID 到 `BuiltinItemConfig`（启用标志 + 排序权重）的映射
-  - `customScripts`：用户定义脚本的数组
-- 当配置发生变化时，`ConfigManager` 会发送 `Notification.Name("RightHelperConfigChanged")` 通知；`AppDelegate` 监听该通知并调用 `NSUpdateDynamicServices()` 以热重载服务。
-- `ConfigManager` 的测试在 `setUp` 中**清除 `UserDefaults`**，以避免跨测试污染。
-
-### 操作分发系统
-
-- `ActionDispatcher` 维护了一个**静态编译时注册表** (`handlers: [String: ActionHandler]`)，其中包含内置的操作实例。自定义脚本在运行时通过从 `ConfigManager.shared.config.customScripts` 中查找脚本 ID 并构造一个 `CustomScriptHandler` 来解析。
-- 所有处理程序都实现 `ActionHandler.handle(filePaths:)` 并以 `async` 方式运行。错误会通过主线程上的 `NSAlert` 向用户展示。
-- 内置操作按功能分组：
-  - `FileActions.swift` — 复制路径/文件名、新建文件、压缩/解压、移动到/复制到
-  - `DevActions.swift` — 在 VS Code/Terminal 中打开、git init/status、格式化 JSON
-  - `SystemActions.swift` — 切换隐藏文件、chmod、创建符号链接、打开父目录
-
-### 脚本执行
-
-- `ScriptExecutor` 提供以下异步方法：
-  - `executeShell(script:arguments:)` — 通过 `/bin/zsh` 运行
-  - `executePython(script:arguments:)` — 通过 `/usr/bin/python3` 运行
-  - `executeAppleScript(source:)` — 通过 `NSAppleScript` 运行
-- Shell/Python 脚本将文件路径作为 `$1`、`$2` 等接收（`arguments` 数组在 `-c` 标志之后附加）。
-
-### 权限模型
-
-- `PermissionManager` 通过探测 `~/Library/Safari` 检查完全磁盘访问权限，并通过 `AXIsProcessTrustedWithOptions` 检查辅助功能权限。
-- 如果未授予完全磁盘访问权限，`AppDelegate` 会在启动时显示一个阻塞式的 `NSAlert`，并带有直接打开系统设置的按钮。
-
-### UI 层
-
-- `StatusBarController` — `NSStatusBar` 图标，系统符号为 `hand.point.up.left`。左键直接打开偏好设置窗口；右键显示菜单（偏好设置、重新加载服务、退出）。这是通过调用 `sendAction(on: [.leftMouseUp, .rightMouseUp])` 并在点击处理程序中检查 `NSApp.currentEvent!.type` 实现的。
-- `PreferencesWindowController` / `PreferencesViewController` — 基于 `NSTableView` 的最小化偏好设置窗口，用于列出菜单项。目前尚未完全实现拖拽重新排序或复选框切换功能；表格目前仅显示项目名称。
-
-### Info.plist 与服务注册
-
-- 所有 Finder 菜单项都在 `Info.plist` 中的 `NSServices` 下静态声明。每个服务将 `NSUserData` 映射到一个操作 ID。
-- `NSUpdateDynamicServices()` 在启动时和配置更改后被调用，以刷新"服务"菜单。
-- **重要：** 添加新的内置操作需要：
-  1. 在适当的 `Actions/*.swift` 文件中实现 `ActionHandler`
-  2. 在 `ActionDispatcher.handlers` 中注册它
-  3. 在 `Info.plist` 的 `NSServices` 下添加相应的 `<dict>` 条目
-
-## 测试规范
+## 测试
 
 ### 基本要求
 
-- **每次代码变更后必须编写对应的单元测试**。新增功能、修复 bug、重构代码均不例外。
-- 测试目标名为 `mac-right-helperTests`，测试类使用 `@testable import mac_right_helper`。
-- 测试类命名规则：`{被测类型名}Tests`，继承 `XCTestCase`。
-- 测试方法命名规则：`test{被测行为描述}`，如 `testSaveAndLoadConfig`、`testHandleShellScriptFailure`。
+- 所有新功能必须包含单元测试
+- 所有 Bug 修复应包含回归测试
+- 提交前测试必须通过：`xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'`
 
-### 测试组织
+### 运行测试
 
-- 每个源文件对应一个测试文件，存放在 `mac-right-helperTests/` 根目录下（目前不分子目录）。
-- 一个测试方法只验证**一个行为点**，避免多断言堆叠。
-- 对正常路径、边界条件、错误路径分别编写独立测试。
+```bash
+# 完整测试套件
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'
 
-### 测试隔离
+# 指定测试类
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
+  -only-testing mac-right-helperTests/ConfigManagerTests
 
-- **UserDefaults**：`ConfigManagerTests` 在 `setUp` 中清除 `UserDefaults.standard` 的目标键，避免测试间状态污染。
-- **剪贴板**：`PasteboardReaderTests` 使用命名 `NSPasteboard`（如 `"test"`），禁止直接操作系统默认剪贴板。
-- **文件系统**：临时测试文件应放在 `/tmp/` 并在测试结束后清理；避免写入用户真实目录。
-- **权限相关**：`PermissionManager` 的状态依赖于外部环境，测试只验证返回值属于有效枚举范围，不做硬性断言。
+# 指定测试方法
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
+  -only-testing mac-right-helperTests/ConfigManagerTests/testSaveAndLoadConfig
 
-### 异步测试
+# 线程竞争检测（CI）
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
+  -enableThreadSanitizer YES
+```
 
-- 使用 `async` 测试方法直接调用 `async throws` 的 API，XCTest 会自动等待完成。
-- 对期望抛出异常的路径，使用 `do/try/catch` 并在未抛出时调用 `XCTFail`。
+### 测试模式
 
-### UI 测试
+- `ActionHandler` 实现至少覆盖：空输入、正常输入、错误路径
+- `ActionDispatcher` 至少覆盖：内置操作解析、自定义脚本解析、未知操作返回 `nil`
+- `ScriptExecutor` 至少覆盖：Shell/Python/AppleScript 成功执行、Shell 失败抛出
+- `ConfigManager` 至少覆盖：默认配置加载、保存与重新加载、自定义脚本往返
+- 对 `async throws` API 使用 `async` 测试方法；对期望抛出异常的路径使用 `do/try/catch` + `XCTFail`
 
-- 由于项目以 `LSUIElement` 运行且 UI 层较薄，目前以单元测试为主。
-- UI 相关类型（如 `OpenPreferencesAction`）的测试只需验证不抛出异常即可，不做窗口状态断言。
+## 构建
 
-### 覆盖率目标
+```bash
+# Release 构建（通过构建脚本）
+./build.sh
 
-- 所有 `ActionHandler` 实现至少覆盖：空输入处理、正常输入、错误路径（如脚本执行失败）。
-- `ActionDispatcher` 至少覆盖：内置 action 解析、自定义脚本解析、未知 action 返回 nil。
-- `ScriptExecutor` 至少覆盖：Shell/Python/AppleScript 成功执行、Shell 失败抛出。
-- `ConfigManager` 至少覆盖：默认配置加载、配置保存与重新加载、自定义脚本往返。
+# Release 构建（通过 xcodebuild）
+xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration Release build
 
-## 编码规范
+# 独立打包（无需 Xcode 项目）
+./package.sh
+```
 
-### 文件组织
+**注意：** `.xcodeproj` 不在本仓库中跟踪。构建脚本假设本地 Xcode 项目中存在一个名为 `mac-right-helper` 的 scheme。
 
-- 按功能将文件放入子目录：`Models/`、`Core/`、`Actions/`、`UI/`、`Utils/`。
-- 每个 Swift 文件只应包含单一职责的类型或逻辑。
-- **禁止**将未使用的模型或死代码留在仓库中。如果类型当前没有被引用，应删除它。
+## 提交前检查清单
 
-### 命名规范
+1. **构建通过**：`xcodebuild -scheme mac-right-helper -destination 'platform=macOS' build`
+2. **测试通过**：`xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'`
+3. **无死代码**：未使用的类型或不可达代码已删除
+4. **新操作在三处注册**：Handler 实现、`ActionDispatcher.handlers`、`Info.plist`
+5. **为新代码添加测试**：单元测试覆盖正常路径、空输入和错误路径
 
-- 类型名使用 `PascalCase`（如 `CopyPathAction`）。
-- 方法、变量、属性使用 `camelCase`（如 `handle(filePaths:)`）。
-- 协议名使用名词或 `-ing` 形式（如 `ActionHandler`）。
-- 枚举的 case 使用 `camelCase`（如 `fileOperations`）。
+## 添加新的内置操作
 
-### 类型设计
-
-- **优先使用 `struct`** 而非 `class`，除非需要引用语义或继承。所有内置操作处理器（`ActionHandler` 的实现）都应为 `struct`。
-- 单例使用 `static let shared` 模式（如 `ConfigManager.shared`）。
-- 使用 `enum` 承载命名空间或状态分类（如 `MenuGroup`、`PermissionStatus`）。
-
-### 协议与实现分离
-
-- 协议定义应存放在独立的文件中（如 `ActionHandler.swift` 只包含协议）。
-- 调度器、通用 Handler 实现应与协议分开存放。
-- 每个具体的 `ActionHandler` 实现按功能分组到对应的 `Actions/*.swift` 文件中。
-
-### 错误处理
-
-- 异步操作统一使用 `async throws` 签名。
-- 错误向上抛给调用方，由 `ActionDispatcher.dispatch` 统一通过 `NSAlert` 在主线程展示。
-- 在 `ActionHandler.handle(filePaths:)` 内部，对空输入使用 `guard let ... else { return }` 尽早返回，而非抛出错误。
-
-### UI 与主线程
-
-- 所有 UI 操作（如 `NSOpenPanel.runModal()`、`NSAlert.runModal()`）必须在主线程执行，使用 `await MainActor.run { ... }` 包装。
-- 状态栏、窗口控制器等 UI 类的初始化放在 `AppDelegate.applicationDidFinishLaunching` 中完成。
-
-### 访问控制
-
-- 不添加不必要的访问控制修饰符；默认 `internal` 即可。
-- 仅在需要隐藏实现细节时使用 `private`（如 `StatusBarController` 中的 `setupMenu()`）。
-
-### 导入语句
-
-- 只导入实际需要的模块。`Foundation` 是基础；需要 AppKit 时才导入 `AppKit`。
-- 避免使用 `import Cocoa` 这种大包导入，应显式导入 `AppKit`。
-
-### 入口点
-
-- `main.swift` 是唯一的应用入口点，手动引导 `NSApplication.shared`。
-- `AppDelegate` **不得**使用 `@main` 注解，避免与 `main.swift` 的引导逻辑冲突。
+1. 在合适的 `Actions/*.swift` 文件中实现 `ActionHandler`（如文件操作放入 `FileActions.swift`）
+2. 在 `ActionDispatcher.handlers` 中注册该 Handler
+3. 在 `Info.plist` 的 `NSServices` 下添加 `<dict>` 条目，`NSUserData` 与操作 ID 一致
+4. 添加单元测试，覆盖空输入、正常输入和错误路径
+5. 运行 `xcodebuild test` 验证

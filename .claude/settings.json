@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true,
+    "ralph-loop@claude-plugins-official": true,
+    "planning-with-files@planning-with-files": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "claude-hud@claude-hud": true
+  }
+}
