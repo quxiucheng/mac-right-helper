@@ -1,26 +1,30 @@
 import Cocoa
 
 class StatusBarController {
-    private var statusItem: NSStatusItem
-    private var preferencesWindowController: PreferencesWindowController?
+    var statusItem: NSStatusItem
+    var preferencesWindowController: PreferencesWindowController?
 
     init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         setupMenu()
     }
 
+    var menu: NSMenu!
+
     private func setupMenu() {
         guard let button = statusItem.button else { return }
         button.image = NSImage(systemSymbolName: "hand.point.up.left", accessibilityDescription: "Right Click Helper")
 
-        let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(showPreferences), keyEquivalent: ","))
+        menu = NSMenu()
+        let preferencesItem = NSMenuItem(title: "Preferences...", action: #selector(showPreferences), keyEquivalent: ",")
+        preferencesItem.target = self
+        menu.addItem(preferencesItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Reload Services", action: #selector(reloadServices), keyEquivalent: "r"))
+        let reloadItem = NSMenuItem(title: "Reload Services", action: #selector(reloadServices), keyEquivalent: "r")
+        reloadItem.target = self
+        menu.addItem(reloadItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-
-        statusItem.menu = menu
 
         button.action = #selector(handleClick)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -30,14 +34,13 @@ class StatusBarController {
     @objc private func handleClick(_ sender: NSStatusBarButton) {
         let event = NSApp.currentEvent!
         if event.type == .rightMouseUp {
-            statusItem.menu = statusItem.menu
-            sender.performClick(nil)
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 2), in: sender)
         } else {
             showPreferences()
         }
     }
 
-    @objc private func showPreferences() {
+    @objc func showPreferences() {
         if preferencesWindowController == nil {
             preferencesWindowController = PreferencesWindowController()
         }
@@ -45,7 +48,7 @@ class StatusBarController {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    @objc private func reloadServices() {
+    @objc func reloadServices() {
         NSUpdateDynamicServices()
     }
 }

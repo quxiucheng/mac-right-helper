@@ -4,7 +4,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        statusBarController = StatusBarController()
+        if !ConfigManager.shared.config.settings.hideStatusBarIcon {
+            statusBarController = StatusBarController()
+        }
         checkPermissions()
         NSUpdateDynamicServices()
 
@@ -14,6 +16,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: ConfigManager.configChangedNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(settingsChanged),
+            name: ConfigManager.configChangedNotification,
+            object: nil
+        )
+    }
+
+    @objc private func settingsChanged() {
+        let shouldHide = ConfigManager.shared.config.settings.hideStatusBarIcon
+        if shouldHide {
+            statusBarController = nil
+        } else if statusBarController == nil {
+            statusBarController = StatusBarController()
+        }
     }
 
     func handleService(_ pboard: NSPasteboard, userData: String, error: AutoreleasingUnsafeMutablePointer<NSString>) {

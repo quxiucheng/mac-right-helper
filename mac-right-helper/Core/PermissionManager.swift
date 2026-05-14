@@ -8,7 +8,8 @@ enum PermissionStatus {
 
 class PermissionManager {
     var fullDiskAccessStatus: PermissionStatus {
-        let testURL = URL(fileURLWithPath: "~/Library/Safari")
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let testURL = home.appendingPathComponent("Library/Safari")
         do {
             _ = try FileManager.default.contentsOfDirectory(atPath: testURL.path)
             return .granted

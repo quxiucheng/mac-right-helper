@@ -13,7 +13,8 @@ class ConfigManager {
 
     init() {
         if let data = UserDefaults.standard.data(forKey: Self.configKey),
-           let decoded = try? JSONDecoder().decode(AppConfig.self, from: data) {
+           let decoded = try? JSONDecoder().decode(AppConfig.self, from: data),
+           decoded.version >= AppConfig.defaultConfig.version {
             self.config = decoded
         } else {
             self.config = AppConfig.defaultConfig
