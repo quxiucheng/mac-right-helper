@@ -1,6 +1,15 @@
 # mac-right-helper
 
-mac-right-helper 是一个 macOS Finder 右键扩展工具，通过 macOS `NSServices` 机制将常用操作注入 Finder 的"服务"菜单，让用户在右键文件/文件夹时即可执行实用功能，无需打开终端或额外应用程序。
+> 让 Finder 右键菜单像终端一样强大。
+
+mac-right-helper 是一款面向开发者和高级用户的 macOS Finder 右键扩展工具。它通过原生 `NSServices` 机制，将文件操作、开发工具、系统增强等实用功能直接注入 Finder 的"服务"菜单——无需打开终端，无需安装独立的 Finder 扩展，右键文件或文件夹即可一键执行。
+
+**核心亮点**
+
+- **零侵入集成**：纯 `NSServices` 实现，无需 Finder Sync Extension，系统资源占用更少
+- **开发工作流原生支持**：一键在 VS Code / Terminal 中打开、Git 操作、JSON 格式化
+- **热重载配置**：修改菜单项或脚本后即时生效，无需重启应用
+- **可编程扩展**：通过 Shell / Python / AppleScript 自定义脚本，打造专属右键菜单
 
 ---
 
@@ -43,30 +52,97 @@ mac-right-helper 是一个 macOS Finder 右键扩展工具，通过 macOS `NSSer
 
 ---
 
-## 系统要求
+## 系统要求与依赖
 
 - **macOS 12.0 (Monterey)** 或更高版本
-- 需要在**系统设置 > 隐私与安全性 > 完全磁盘访问权限**中授予应用权限
+- **Xcode 14+**（可选，用于调试与测试；独立打包仅需 Swift 工具链）
+- 运行时需在**系统设置 > 隐私与安全性 > 完全磁盘访问权限**中授予应用权限
 - 首次使用时需在**系统设置 > 通用 > 登录项与扩展 > 服务**中勾选本应用
 
 ---
 
-## 安装
+## 编译说明
+
+本项目提供两种构建方式，可根据需要选择：
+
+### 方式一：Xcode 构建（推荐开发调试）
+
+需要本地已配置好 Xcode 项目及 `mac-right-helper` scheme。
 
 ```bash
-git clone https://github.com/yourusername/mac-right-helper.git
-cd mac-right-helper
-```
+# Debug 构建
+xcodebuild -scheme mac-right-helper -destination 'platform=macOS' build
 
-使用 Xcode 打开项目并构建运行，或使用命令行构建：
-
-```bash
 # Release 构建
-./build.sh
-
-# 或直接使用 xcodebuild
 xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration Release build
 ```
+
+构建产物位于 `build/Release/mac-right-helper.app`。
+
+### 方式二：独立打包（无需 Xcode 项目）
+
+仓库内置 `package.sh`，可直接调用 `swiftc` 编译源码并生成完整的 `.app` Bundle。适用于 CI 环境或没有配置 Xcode 项目的场景。
+
+```bash
+# 使用默认 ad-hoc 签名
+./package.sh
+
+# 使用 Developer ID 签名（用于对外分发）
+CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./package.sh
+```
+
+脚本将自动完成以下步骤：
+1. 扫描 `mac-right-helper/` 目录下所有 `.swift` 源文件
+2. 创建 `.app` Bundle 目录结构
+3. 调用 `swiftc` 编译为 Release 二进制（启用 `-O` 和全模块优化）
+4. 复制 `Info.plist` 到 Bundle 中
+5. 执行代码签名（`codesign --force --deep --sign`）
+6. 验证签名有效性
+
+构建产物位于 `build/mac-right-helper.app`。
+
+---
+
+## 部署说明
+
+### 本地安装
+
+将构建好的 `.app` 复制到 Applications 目录：
+
+```bash
+# 安装到用户目录（推荐）
+cp -R build/mac-right-helper.app ~/Applications/
+
+# 或安装到系统目录
+sudo cp -R build/mac-right-helper.app /Applications/
+```
+
+首次启动时，应用会以 `LSUIElement` 后台模式运行（无 Dock 图标），状态栏会出现一个 `hand.point.up.left` 图标。
+
+### 权限配置
+
+1. **完全磁盘访问权限**
+   打开 **系统设置 > 隐私与安全性 > 完全磁盘访问权限**，点击 `+` 添加已安装的 `mac-right-helper.app`。该权限用于执行复制路径、移动文件、压缩/解压等文件操作。
+
+2. **辅助功能权限（可选）**
+   部分系统级操作（如切换隐藏文件）需要辅助功能权限。首次执行相关操作时系统会提示授权。
+
+3. **启用服务菜单**
+   打开 **系统设置 > 通用 > 登录项与扩展 > 服务**，勾选 **mac-right-helper** 下的所有菜单项。勾选后，Finder 右键的"服务"子菜单才会显示本应用的功能。
+
+### 打包分发
+
+若需将应用打包为 ZIP 或 DMG 进行分发，可在执行 `package.sh` 后使用以下命令：
+
+```bash
+# 生成 ZIP
+ditto -c -k --sequesterRsrc --keepParent build/mac-right-helper.app build/mac-right-helper.zip
+
+# 生成 DMG
+hdiutil create -volname "mac-right-helper" -srcfolder build/mac-right-helper.app -ov build/mac-right-helper.dmg
+```
+
+对外分发前，建议设置有效的 `CODE_SIGN_IDENTITY` 进行正式代码签名，否则用户可能遇到 Gatekeeper 拦截。
 
 ---
 
@@ -78,11 +154,13 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 
 2. **在 Finder 中右键**任意文件或文件夹，选择"服务"子菜单，即可看到所有可用操作
 
-3. **配置自定义脚本**：通过偏好设置窗口添加、排序或禁用菜单项
+3. **配置自定义脚本**：通过偏好设置窗口添加、排序或禁用菜单项。配置保存后调用 `NSUpdateDynamicServices()` 自动热重载，无需重启应用
 
 ---
 
-## 项目结构
+## 开发指南
+
+### 项目结构
 
 ```
 mac-right-helper/
@@ -120,19 +198,36 @@ mac-right-helperTests/            # XCTest 测试目标
 └── OpenPreferencesActionTests.swift
 ```
 
----
+### 添加新的内置操作
 
-## 开发
+新增内置操作需要完成以下三步：
 
-### 构建
+1. **实现 Handler**：在 `Actions/FileActions.swift`、`DevActions.swift` 或 `SystemActions.swift` 中实现 `ActionHandler` 协议
 
-```bash
-# Release 构建
-./build.sh
+   ```swift
+   struct MyAction: ActionHandler {
+       func handle(filePaths: [String]) async throws {
+           guard !filePaths.isEmpty else { return }
+           // 执行操作...
+       }
+   }
+   ```
 
-# Debug 构建
-xcodebuild -scheme mac-right-helper -destination 'platform=macOS' build
-```
+2. **注册到分发器**：在 `ActionDispatcher.handlers` 中添加该操作到注册表
+
+   ```swift
+   "myAction": MyAction()
+   ```
+
+3. **声明服务**：在 `Info.plist` 的 `NSServices` 数组下添加对应的 `<dict>` 条目，`NSUserData` 的值必须与注册表中的 Key 完全一致
+
+4. **编写单元测试**：覆盖空输入、正常输入和错误路径
+
+5. **运行测试验证**：
+
+   ```bash
+   xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'
+   ```
 
 ### 测试
 
@@ -141,18 +236,17 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' build
 xcodebuild test -scheme mac-right-helper -destination 'platform=macOS'
 
 # 运行单个测试类
-xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-testing mac-right-helperTests/ConfigManagerTests
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
+  -only-testing mac-right-helperTests/ConfigManagerTests
 
 # 运行单个测试方法
-xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-testing mac-right-helperTests/ConfigManagerTests/testSaveAndLoadConfig
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
+  -only-testing mac-right-helperTests/ConfigManagerTests/testSaveAndLoadConfig
+
+# 线程竞争检测（CI 推荐）
+xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
+  -enableThreadSanitizer YES
 ```
-
-### 添加新的内置操作
-
-1. 在 `Actions/FileActions.swift`、`DevActions.swift` 或 `SystemActions.swift` 中实现 `ActionHandler` 协议
-2. 在 `ActionDispatcher.handlers` 中注册该操作
-3. 在 `Info.plist` 的 `NSServices` 下添加对应的 `<dict>` 条目
-4. 编写对应的单元测试
 
 ---
 
@@ -161,7 +255,9 @@ xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' -only-tes
 - 应用以 `LSUIElement` 后台代理运行，**无 Dock 图标**
 - Finder 集成完全依赖 `Info.plist` 中的 `NSServices` 声明，无需独立的 Finder Sync Extension
 - 使用 `NSUpdateDynamicServices()` 在运行时热重载服务列表，配置更改后无需重启应用
-- 所有操作均为异步执行，错误通过 `NSAlert` 在主线程展示
+- 所有操作均为异步执行（`async throws`），错误通过 `NSAlert` 在主线程统一展示
+- `ActionHandler` 全部采用无状态的 `struct` 实现，避免共享可变状态
+- `Core/` 模块不依赖 `Actions/` 或 `UI/`，保持底层能力的独立性
 
 ---
 
