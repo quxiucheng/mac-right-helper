@@ -120,7 +120,7 @@ CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./package.sh
 
 1. **收集源文件**：递归扫描 `mac-right-helper/` 目录下所有 `.swift` 文件
 2. **准备 Bundle 目录**：创建 `build/mac-right-helper.app/Contents/MacOS` 和 `Resources`
-3. **编译二进制**：调用 `swiftc` 以 Release 模式编译（启用 `-O` 和 `-whole-module-optimization`），目标架构为 `x86_64-apple-macosx12.0`，链接 `Foundation`、`AppKit`、`ApplicationServices` 框架
+3. **编译二进制**：分别调用 `swiftc` 编译 `arm64` 和 `x86_64` 两个架构的二进制（启用 `-O` 和 `-whole-module-optimization`），链接 `Foundation`、`AppKit`、`ApplicationServices` 框架；再用 `lipo` 合并为通用二进制（Universal Binary），同时支持 Apple Silicon 和 Intel Mac
 4. **复制 Info.plist**：将 `mac-right-helper/Info.plist` 复制到 `Contents/Info.plist`；若源文件不存在则生成默认配置
 5. **代码签名**：先尝试带 `--options runtime` 签名，失败则回退到普通深度签名
 6. **验证签名**：调用 `codesign -vv --deep` 检查签名有效性

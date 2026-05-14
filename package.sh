@@ -35,17 +35,39 @@ mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
 # 3. Compile binary
 echo "Compiling binary..."
-ARCH=$(uname -m)
+BINARY_PATH="${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+TMP_DIR=$(mktemp -d)
+
+echo "  → Building arm64..."
 find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
     -O \
     -whole-module-optimization \
-    -target "${ARCH}-apple-macosx${MIN_MACOS_VERSION}" \
-    -o "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}" \
+    -target "arm64-apple-macosx${MIN_MACOS_VERSION}" \
+    -o "${TMP_DIR}/${APP_NAME}_arm64" \
     -framework Foundation \
     -framework AppKit \
     -framework ApplicationServices
 
-chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+echo "  → Building x86_64..."
+find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
+    -O \
+    -whole-module-optimization \
+    -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
+    -o "${TMP_DIR}/${APP_NAME}_x86_64" \
+    -framework Foundation \
+    -framework AppKit \
+    -framework ApplicationServices
+
+echo "  → Creating universal binary..."
+lipo -create \
+    "${TMP_DIR}/${APP_NAME}_arm64" \
+    "${TMP_DIR}/${APP_NAME}_x86_64" \
+    -output "${BINARY_PATH}"
+
+chmod +x "${BINARY_PATH}"
+rm -rf "${TMP_DIR}"
+
+echo "  → Architectures: $(lipo -archs "${BINARY_PATH}")"
 
 # 4. Copy Info.plist and substitute variables
 echo "Copying Info.plist..."
