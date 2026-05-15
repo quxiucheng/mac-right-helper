@@ -1,9 +1,17 @@
 import Cocoa
+import CoreServices
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Force register app with Launch Services so NSServices in Info.plist
+        // are discovered and appear in Finder's right-click menu
+        if let bundleURL = Bundle.main.bundleURL as URL? {
+            LSRegisterURL(bundleURL as CFURL, true)
+        }
+        NSUpdateDynamicServices()
+
         if !ConfigManager.shared.config.settings.hideStatusBarIcon {
             statusBarController = StatusBarController()
         }
@@ -11,7 +19,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Register app as services provider so Finder right-click menu works
         NSApp.servicesProvider = self
-        NSUpdateDynamicServices()
 
         NotificationCenter.default.addObserver(
             self,

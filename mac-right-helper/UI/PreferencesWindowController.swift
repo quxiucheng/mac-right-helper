@@ -18,18 +18,18 @@ class PreferencesWindowController: NSWindowController {
 class PreferencesTabViewController: NSTabViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        makeTabViewItem(NSTabViewItem(viewController: GeneralPreferencesViewController()))
-        makeTabViewItem(NSTabViewItem(viewController: ActionsPreferencesViewController()))
-        makeTabViewItem(NSTabViewItem(viewController: TemplatesPreferencesViewController()))
-        makeTabViewItem(NSTabViewItem(viewController: FoldersPreferencesViewController()))
-        makeTabViewItem(NSTabViewItem(viewController: DirectoriesPreferencesViewController()))
-        makeTabViewItem(NSTabViewItem(viewController: ScriptsPreferencesViewController()))
+        addTab(GeneralPreferencesViewController(), label: L("generalTab"))
+        addTab(ActionsPreferencesViewController(), label: L("actionsTab"))
+        addTab(TemplatesPreferencesViewController(), label: L("templatesTab"))
+        addTab(FoldersPreferencesViewController(), label: L("foldersTab"))
+        addTab(DirectoriesPreferencesViewController(), label: L("directoriesTab"))
+        addTab(ScriptsPreferencesViewController(), label: L("scriptsTab"))
     }
 
-    private func makeTabViewItem(_ item: NSTabViewItem) {
-        if let vc = item.viewController {
-            item.label = vc.title ?? "Tab"
-        }
+    private func addTab(_ vc: NSViewController, label: String) {
+        let item = NSTabViewItem(viewController: vc)
+        item.label = label
+        vc.title = label
         super.addTabViewItem(item)
     }
 }
