@@ -12,9 +12,9 @@ final class StatusBarControllerTests: XCTestCase {
         let controller = StatusBarController()
         let items = controller.menu.items
         XCTAssertEqual(items.count, 5)
-        XCTAssertEqual(items[0].title, "Preferences...")
-        XCTAssertEqual(items[2].title, "Reload Services")
-        XCTAssertEqual(items[4].title, "Quit")
+        XCTAssertEqual(items[0].title, L("preferences"))
+        XCTAssertEqual(items[2].title, L("reloadServices"))
+        XCTAssertEqual(items[4].title, L("quit"))
     }
 
     func testShowPreferencesCreatesWindowController() {

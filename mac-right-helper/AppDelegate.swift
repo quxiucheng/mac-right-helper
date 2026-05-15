@@ -8,6 +8,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             statusBarController = StatusBarController()
         }
         checkPermissions()
+
+        // Register app as services provider so Finder right-click menu works
+        NSApp.servicesProvider = self
         NSUpdateDynamicServices()
 
         NotificationCenter.default.addObserver(
@@ -22,6 +25,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: ConfigManager.configChangedNotification,
             object: nil
         )
+
+        // Show preferences window on launch
+        if let sc = statusBarController {
+            sc.showPreferences()
+        }
     }
 
     @objc private func settingsChanged() {
@@ -30,10 +38,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             statusBarController = nil
         } else if statusBarController == nil {
             statusBarController = StatusBarController()
+            statusBarController?.showPreferences()
         }
     }
 
-    func handleService(_ pboard: NSPasteboard, userData: String, error: AutoreleasingUnsafeMutablePointer<NSString>) {
+    @objc func handleService(_ pboard: NSPasteboard, userData: String, error: AutoreleasingUnsafeMutablePointer<NSString>) {
         let paths = PasteboardReader.extractFilePaths(from: pboard)
         Task {
             await ActionDispatcher.dispatch(actionID: userData, filePaths: paths)

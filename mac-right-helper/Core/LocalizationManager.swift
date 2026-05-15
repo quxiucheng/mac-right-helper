@@ -19,7 +19,7 @@ class LocalizationManager {
         "quit": [.chinese: "退出", .english: "Quit"],
 
         // General Tab
-        "generalTab": [.chinese: "通用", .english: "General"],
+        "generalTab": [.chinese: "通用设置", .english: "General"],
         "hideStatusBarIcon": [.chinese: "隐藏菜单栏图标", .english: "Hide status bar icon"],
         "trashConfirmation": [.chinese: "删除确认：", .english: "Trash confirmation:"],
         "trashConfirmDesc": [.chinese: "永久删除前显示确认", .english: "Show confirmation before permanently deleting"],
@@ -32,31 +32,31 @@ class LocalizationManager {
         "languageLabel": [.chinese: "语言：", .english: "Language:"],
 
         // Actions Tab
-        "actionsTab": [.chinese: "操作", .english: "Actions"],
-        "builtinActions": [.chinese: "内置操作", .english: "Built-in Actions"],
+        "actionsTab": [.chinese: "管理功能", .english: "Manage Features"],
+        "builtinActions": [.chinese: "内置功能列表", .english: "Feature List"],
         "enabled": [.chinese: "启用", .english: "Enabled"],
         "name": [.chinese: "名称", .english: "Name"],
         "group": [.chinese: "分组", .english: "Group"],
 
         // Templates Tab
-        "templatesTab": [.chinese: "模板", .english: "Templates"],
+        "templatesTab": [.chinese: "文件模板", .english: "File Templates"],
         "extensionLabel": [.chinese: "扩展名", .english: "Extension"],
         "content": [.chinese: "内容", .english: "Content"],
         "add": [.chinese: "添加", .english: "Add"],
         "remove": [.chinese: "删除", .english: "Remove"],
 
         // Folders Tab
-        "foldersTab": [.chinese: "文件夹", .english: "Folders"],
+        "foldersTab": [.chinese: "发送到文件夹", .english: "Send to Folders"],
         "favoriteFolders": [.chinese: "常用文件夹", .english: "Favorite Folders"],
         "path": [.chinese: "路径", .english: "Path"],
 
         // Directories Tab
-        "directoriesTab": [.chinese: "目录", .english: "Directories"],
-        "favoriteDirectories": [.chinese: "常用目录", .english: "Favorite Directories"],
+        "directoriesTab": [.chinese: "常用目录", .english: "Favorite Directories"],
+        "favoriteDirectories": [.chinese: "常用目录列表", .english: "Directory List"],
 
         // Scripts Tab
-        "scriptsTab": [.chinese: "脚本", .english: "Scripts"],
-        "customScripts": [.chinese: "自定义脚本", .english: "Custom Scripts"],
+        "scriptsTab": [.chinese: "自定义脚本", .english: "Custom Scripts"],
+        "customScripts": [.chinese: "脚本列表", .english: "Script List"],
         "type": [.chinese: "类型", .english: "Type"],
         "source": [.chinese: "源码", .english: "Source"],
         "save": [.chinese: "保存", .english: "Save"],
