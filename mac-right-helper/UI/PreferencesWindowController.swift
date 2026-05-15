@@ -39,14 +39,13 @@ class PreferencesTabViewController: NSTabViewController {
 class GeneralPreferencesViewController: NSViewController {
     private let configManager = ConfigManager.shared
 
-    override var title: String? { "General" }
-
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 660, height: 460))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "General"
         let settings = configManager.config.settings
 
         var y: CGFloat = 420
@@ -135,8 +134,6 @@ class ActionsPreferencesViewController: NSViewController {
     private var tableView: NSTableView!
     private let configManager = ConfigManager.shared
 
-    override var title: String? { "Actions" }
-
     private var sortedKeys: [String] {
         configManager.config.builtinItems.sorted { $0.value.weight < $1.value.weight }.map { $0.key }
     }
@@ -147,6 +144,7 @@ class ActionsPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Actions"
         let label = NSTextField(labelWithString: "Built-in Actions")
         label.font = NSFont.boldSystemFont(ofSize: 13)
         label.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
@@ -257,14 +255,13 @@ class TemplatesPreferencesViewController: NSViewController {
     private var tableView: NSTableView!
     private let configManager = ConfigManager.shared
 
-    override var title: String? { "Templates" }
-
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 660, height: 460))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Templates"
         setupTable(label: "Templates", items: [
             ("Name", 120), ("Extension", 80), ("Content", 380)
         ])
@@ -382,11 +379,11 @@ class TemplateEditorSheet: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         var y: CGFloat = 240
-        for (label, field, width) in [("Name:", nameField, 120), ("Extension:", extField, 80)] {
+        for (label, field, w) in [("Name:", nameField, 120), ("Extension:", extField, 80)] {
             let lbl = NSTextField(labelWithString: label)
             lbl.frame = NSRect(x: 20, y: y, width: 80, height: 20)
             view.addSubview(lbl)
-            field.frame = NSRect(x: 110, y: y - 2, width: width, height: 22)
+            field.frame = NSRect(x: 110, y: y - 2, width: CGFloat(w), height: 22)
             view.addSubview(field)
             y -= 34
         }
@@ -433,14 +430,13 @@ class FoldersPreferencesViewController: NSViewController {
     private var tableView: NSTableView!
     private let configManager = ConfigManager.shared
 
-    override var title: String? { "Folders" }
-
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 660, height: 460))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Folders"
         setupTable(label: "Favorite Folders", columns: [("Name", 150), ("Path", 400)])
     }
 
@@ -517,14 +513,13 @@ class DirectoriesPreferencesViewController: NSViewController {
     private var tableView: NSTableView!
     private let configManager = ConfigManager.shared
 
-    override var title: String? { "Directories" }
-
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 660, height: 460))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Directories"
         let labelField = NSTextField(labelWithString: "Favorite Directories")
         labelField.font = NSFont.boldSystemFont(ofSize: 13)
         labelField.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
@@ -542,10 +537,10 @@ class DirectoriesPreferencesViewController: NSViewController {
         scrollView.borderType = .bezelBorder
         tableView = NSTableView()
         tableView.allowsMultipleSelection = false
-        for (name, width) in [("Name", 150), ("Path", 400)] {
+        for (name, w) in [("Name", 150), ("Path", 400)] {
             let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(name.lowercased()))
             col.title = name
-            col.width = width
+            col.width = CGFloat(w)
             tableView.addTableColumn(col)
         }
         tableView.headerView = NSTableHeaderView()
@@ -597,14 +592,13 @@ class ScriptsPreferencesViewController: NSViewController {
     private var tableView: NSTableView!
     private let configManager = ConfigManager.shared
 
-    override var title: String? { "Scripts" }
-
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 660, height: 460))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Scripts"
         let labelField = NSTextField(labelWithString: "Custom Scripts")
         labelField.font = NSFont.boldSystemFont(ofSize: 13)
         labelField.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
@@ -622,10 +616,10 @@ class ScriptsPreferencesViewController: NSViewController {
         scrollView.borderType = .bezelBorder
         tableView = NSTableView()
         tableView.allowsMultipleSelection = false
-        for (name, width) in [("Name", 150), ("Type", 80), ("Source", 340)] {
+        for (name, w) in [("Name", 150), ("Type", 80), ("Source", 340)] {
             let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(name.lowercased()))
             col.title = name
-            col.width = width
+            col.width = CGFloat(w)
             tableView.addTableColumn(col)
         }
         tableView.headerView = NSTableHeaderView()

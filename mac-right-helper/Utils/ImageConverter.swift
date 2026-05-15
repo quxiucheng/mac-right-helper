@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import CoreGraphics
 import ImageIO
+import UniformTypeIdentifiers
 
 enum ImageConverter {
     enum ConversionError: Error {
@@ -23,13 +24,14 @@ enum ImageConverter {
             }
         }
 
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+        guard !images.isEmpty else {
             throw ConversionError.loadFailed
         }
 
+        let utType = UTType.icns.identifier as CFString
         guard let destination = CGImageDestinationCreateWithURL(
             URL(fileURLWithPath: outputPath) as CFURL,
-            kUTTypeAppleICNS, images.count, nil
+            utType, images.count, nil
         ) else {
             throw ConversionError.writeFailed
         }
@@ -70,8 +72,7 @@ enum ImageConverter {
         inputPath: String, outputDir: String,
         sizes: [(Int, String)]
     ) throws {
-        guard let image = NSImage(contentsOfFile: inputPath),
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+        guard let image = NSImage(contentsOfFile: inputPath) else {
             throw ConversionError.loadFailed
         }
 
@@ -85,7 +86,8 @@ enum ImageConverter {
             }
             let outputPath = (outputDir as NSString).appendingPathComponent("icon_\(label).png")
             let url = URL(fileURLWithPath: outputPath)
-            guard let destination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) else {
+            let utType = UTType.png.identifier as CFString
+            guard let destination = CGImageDestinationCreateWithURL(url as CFURL, utType, 1, nil) else {
                 continue
             }
             CGImageDestinationAddImage(destination, resizedCG, nil)

@@ -8,19 +8,6 @@ struct OpenInVSCodeAction: ActionHandler {
     }
 }
 
-struct OpenInTerminalAction: ActionHandler {
-    func handle(filePaths: [String]) async throws {
-        guard let path = filePaths.first else { return }
-        var dir = path
-        var isDir: ObjCBool = false
-        if FileManager.default.fileExists(atPath: path, isDirectory: &isDir), !isDir.boolValue {
-            dir = URL(fileURLWithPath: path).deletingLastPathComponent().path
-        }
-        let executor = ScriptExecutor()
-        _ = try await executor.executeShell(script: "open -a Terminal \"$1\"", arguments: [dir])
-    }
-}
-
 struct GitInitAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard let path = filePaths.first else { return }

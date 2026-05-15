@@ -11,7 +11,6 @@ enum IconSetter {
         guard let image = NSImage(contentsOfFile: imagePath) else {
             throw IconError.loadFailed
         }
-        let url = URL(fileURLWithPath: targetPath)
         let result = NSWorkspace.shared.setIcon(image, forFile: targetPath)
         if !result {
             throw IconError.setFailed
