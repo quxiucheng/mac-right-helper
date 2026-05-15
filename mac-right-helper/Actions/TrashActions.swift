@@ -8,11 +8,11 @@ struct TrashPermanentlyAction: ActionHandler {
         if settings.trashConfirm {
             let confirmed = await MainActor.run { () -> Bool in
                 let alert = NSAlert()
-                alert.messageText = "Permanently Delete?"
-                alert.informativeText = "This will permanently delete \(filePaths.count) item(s). This cannot be undone."
+                alert.messageText = L("permanentlyDelete")
+                alert.informativeText = L("permanentlyDeleteInfo", arguments: filePaths.count)
                 alert.alertStyle = .critical
-                alert.addButton(withTitle: "Delete")
-                alert.addButton(withTitle: "Cancel")
+                alert.addButton(withTitle: L("delete"))
+                alert.addButton(withTitle: L("cancel"))
                 return alert.runModal() == .alertFirstButtonReturn
             }
             guard confirmed else { return }

@@ -59,7 +59,7 @@ struct MoveToAction: ActionHandler {
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
             panel.allowsMultipleSelection = false
-            panel.message = "Choose destination folder"
+            panel.message = L("chooseDestinationFolder")
             guard panel.runModal() == .OK else { return nil }
             return panel.url
         }
@@ -78,7 +78,7 @@ struct CopyToAction: ActionHandler {
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
             panel.allowsMultipleSelection = false
-            panel.message = "Choose destination folder"
+            panel.message = L("chooseDestinationFolder")
             guard panel.runModal() == .OK else { return nil }
             return panel.url
         }

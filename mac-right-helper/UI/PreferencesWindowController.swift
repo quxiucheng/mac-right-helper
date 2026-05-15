@@ -8,7 +8,7 @@ class PreferencesWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Right Click Helper Preferences"
+        window.title = L("preferences")
         window.center()
         self.init(window: window)
         window.contentViewController = PreferencesTabViewController()
@@ -45,47 +45,47 @@ class GeneralPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "General"
+        self.title = L("generalTab")
         let settings = configManager.config.settings
 
         var y: CGFloat = 420
 
-        let hideIconCheckbox = NSButton(checkboxWithTitle: "Hide status bar icon", target: self, action: #selector(toggleHideIcon(_:)))
+        let hideIconCheckbox = NSButton(checkboxWithTitle: L("hideStatusBarIcon"), target: self, action: #selector(toggleHideIcon(_:)))
         hideIconCheckbox.state = settings.hideStatusBarIcon ? .on : .off
         hideIconCheckbox.frame = NSRect(x: 20, y: y, width: 300, height: 22)
         view.addSubview(hideIconCheckbox)
         y -= 36
 
-        let trashLabel = NSTextField(labelWithString: "Trash confirmation:")
+        let trashLabel = NSTextField(labelWithString: L("trashConfirmation"))
         trashLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
         view.addSubview(trashLabel)
-        let trashCheckbox = NSButton(checkboxWithTitle: "Show confirmation before permanently deleting", target: self, action: #selector(toggleTrashConfirm(_:)))
+        let trashCheckbox = NSButton(checkboxWithTitle: L("trashConfirmDesc"), target: self, action: #selector(toggleTrashConfirm(_:)))
         trashCheckbox.state = settings.trashConfirm ? .on : .off
         trashCheckbox.frame = NSRect(x: 160, y: y, width: 400, height: 22)
         view.addSubview(trashCheckbox)
         y -= 36
 
-        let cutLabel = NSTextField(labelWithString: "Cut behavior:")
+        let cutLabel = NSTextField(labelWithString: L("cutBehavior"))
         cutLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
         view.addSubview(cutLabel)
-        let cutCheckbox = NSButton(checkboxWithTitle: "Hide files after cutting", target: self, action: #selector(toggleCutHide(_:)))
+        let cutCheckbox = NSButton(checkboxWithTitle: L("cutHideDesc"), target: self, action: #selector(toggleCutHide(_:)))
         cutCheckbox.state = settings.cutHideFiles ? .on : .off
         cutCheckbox.frame = NSRect(x: 160, y: y, width: 400, height: 22)
         view.addSubview(cutCheckbox)
         y -= 36
 
-        let terminalLabel = NSTextField(labelWithString: "Terminal open mode:")
+        let terminalLabel = NSTextField(labelWithString: L("terminalOpenMode"))
         terminalLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
         view.addSubview(terminalLabel)
         let terminalPopup = NSPopUpButton(frame: NSRect(x: 160, y: y, width: 180, height: 24))
-        terminalPopup.addItems(withTitles: ["New Window", "New Tab"])
+        terminalPopup.addItems(withTitles: [L("newWindow"), L("newTab")])
         terminalPopup.selectItem(at: settings.terminalOpenMode == .newWindow ? 0 : 1)
         terminalPopup.target = self
         terminalPopup.action = #selector(terminalModeChanged(_:))
         view.addSubview(terminalPopup)
         y -= 44
 
-        let editorLabel = NSTextField(labelWithString: "Default editor:")
+        let editorLabel = NSTextField(labelWithString: L("defaultEditor"))
         editorLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
         view.addSubview(editorLabel)
         let editorPopup = NSPopUpButton(frame: NSRect(x: 160, y: y, width: 280, height: 24))
@@ -98,6 +98,17 @@ class GeneralPreferencesViewController: NSViewController {
         editorPopup.target = self
         editorPopup.action = #selector(defaultEditorChanged(_:))
         view.addSubview(editorPopup)
+        y -= 44
+
+        let langLabel = NSTextField(labelWithString: L("languageLabel"))
+        langLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
+        view.addSubview(langLabel)
+        let langPopup = NSPopUpButton(frame: NSRect(x: 160, y: y, width: 180, height: 24))
+        langPopup.addItems(withTitles: ["中文", "English"])
+        langPopup.selectItem(at: settings.language == .chinese ? 0 : 1)
+        langPopup.target = self
+        langPopup.action = #selector(languageChanged(_:))
+        view.addSubview(langPopup)
     }
 
     @objc private func toggleHideIcon(_ sender: NSButton) {
@@ -126,6 +137,16 @@ class GeneralPreferencesViewController: NSViewController {
         configManager.config.settings.defaultEditor = EditorConfig.allEditors[idx].bundleID
         configManager.save()
     }
+
+    @objc private func languageChanged(_ sender: NSPopUpButton) {
+        configManager.config.settings.language = sender.indexOfSelectedItem == 0 ? .chinese : .english
+        configManager.save()
+        let alert = NSAlert()
+        alert.messageText = L("languageLabel")
+        alert.informativeText = L("restartToApply")
+        alert.alertStyle = .informational
+        alert.runModal()
+    }
 }
 
 // MARK: - Built-in Actions
@@ -144,8 +165,8 @@ class ActionsPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Actions"
-        let label = NSTextField(labelWithString: "Built-in Actions")
+        self.title = L("actionsTab")
+        let label = NSTextField(labelWithString: L("builtinActions"))
         label.font = NSFont.boldSystemFont(ofSize: 13)
         label.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
         view.addSubview(label)
@@ -158,17 +179,17 @@ class ActionsPreferencesViewController: NSViewController {
         tableView.allowsMultipleSelection = false
 
         let enabledCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("enabled"))
-        enabledCol.title = "Enabled"
+        enabledCol.title = L("enabled")
         enabledCol.width = 60
         tableView.addTableColumn(enabledCol)
 
         let nameCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("name"))
-        nameCol.title = "Name"
+        nameCol.title = L("name")
         nameCol.width = 240
         tableView.addTableColumn(nameCol)
 
         let groupCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("group"))
-        groupCol.title = "Group"
+        groupCol.title = L("group")
         groupCol.width = 100
         tableView.addTableColumn(groupCol)
 
@@ -181,31 +202,7 @@ class ActionsPreferencesViewController: NSViewController {
     }
 
     private func displayName(for actionID: String) -> String {
-        let names: [String: String] = [
-            "copyPath": "Copy Path", "copyFileName": "Copy File Name",
-            "newFile": "New File", "newFileWithTemplate": "New File with Template",
-            "newFolderFromFileName": "New Folder from File Name",
-            "compress": "Compress", "decompress": "Decompress",
-            "moveTo": "Move To...", "copyTo": "Copy To...",
-            "cutFiles": "Cut", "sendToPicker": "Send To...",
-            "sendAliasToDesktop": "Send Alias to Desktop",
-            "trashPermanently": "Permanently Delete",
-            "favoriteDirPicker": "Go to Directory...",
-            "showFileInfo": "File Info (Hash)", "airdrop": "AirDrop",
-            "openInVSCode": "Open in VS Code", "openInTerminal": "Open in Terminal",
-            "openInITerm2": "Open in iTerm2", "openInSublimeText": "Open in Sublime Text",
-            "openInWarp": "Open in Warp", "openInIDEA": "Open in IntelliJ IDEA",
-            "gitInit": "Git Init", "gitStatus": "Git Status", "formatJSON": "Format JSON",
-            "toggleHiddenFiles": "Toggle Hidden Files", "hideSelectedFiles": "Hide Selected Files",
-            "unhideSelectedFiles": "Unhide Selected Files", "changePermissions": "Make Executable",
-            "createSymlink": "Create Symlink", "openParentDirectory": "Open Parent Directory",
-            "imageToICNS": "Convert to ICNS", "imageToIOSIcons": "Convert to iOS Icon Set",
-            "imageToMacIcons": "Convert to Mac Icon Set", "setCustomIcon": "Set Custom Icon",
-            "translateBaidu": "Baidu Translate", "translateGoogle": "Google Translate",
-            "toQRCode": "Convert to QR Code",
-            "iShotScreenshot": "iShot Screenshot", "iShotAnnotate": "iShot Annotate",
-        ]
-        return names[actionID] ?? actionID
+        return L(actionID)
     }
 }
 
@@ -229,7 +226,7 @@ extension ActionsPreferencesViewController: NSTableViewDataSource, NSTableViewDe
             cell.textField = text
             cell.addSubview(text)
         case "group":
-            let text = NSTextField(labelWithString: config.group)
+            let text = NSTextField(labelWithString: L("group" + config.group))
             cell.textField = text
             cell.addSubview(text)
         default:
@@ -261,9 +258,9 @@ class TemplatesPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Templates"
-        setupTable(label: "Templates", items: [
-            ("Name", 120), ("Extension", 80), ("Content", 380)
+        self.title = L("templatesTab")
+        setupTable(label: L("templatesTab"), items: [
+            (L("name"), 120), (L("extensionLabel"), 80), (L("content"), 380)
         ])
     }
 
@@ -273,11 +270,11 @@ class TemplatesPreferencesViewController: NSViewController {
         labelField.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
         view.addSubview(labelField)
 
-        let addButton = NSButton(title: "Add", target: self, action: #selector(addItem))
+        let addButton = NSButton(title: L("add"), target: self, action: #selector(addItem))
         addButton.frame = NSRect(x: 20, y: 400, width: 80, height: 28)
         view.addSubview(addButton)
 
-        let removeButton = NSButton(title: "Remove", target: self, action: #selector(removeItem))
+        let removeButton = NSButton(title: L("remove"), target: self, action: #selector(removeItem))
         removeButton.frame = NSRect(x: 110, y: 400, width: 80, height: 28)
         view.addSubview(removeButton)
 
@@ -379,7 +376,7 @@ class TemplateEditorSheet: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         var y: CGFloat = 240
-        for (label, field, w) in [("Name:", nameField, 120), ("Extension:", extField, 80)] {
+        for (label, field, w) in [(L("templateName"), nameField, 120), (L("templateExtension"), extField, 80)] {
             let lbl = NSTextField(labelWithString: label)
             lbl.frame = NSRect(x: 20, y: y, width: 80, height: 20)
             view.addSubview(lbl)
@@ -390,7 +387,7 @@ class TemplateEditorSheet: NSViewController {
         nameField.stringValue = editing?.name ?? ""
         extField.stringValue = editing?.ext ?? ""
 
-        let srcLabel = NSTextField(labelWithString: "Content:")
+        let srcLabel = NSTextField(labelWithString: L("templateContent"))
         srcLabel.frame = NSRect(x: 20, y: y, width: 80, height: 20)
         view.addSubview(srcLabel)
         let scroll = NSScrollView(frame: NSRect(x: 110, y: 60, width: 270, height: y - 70))
@@ -400,10 +397,10 @@ class TemplateEditorSheet: NSViewController {
         scroll.documentView = contentField
         view.addSubview(scroll)
 
-        let saveBtn = NSButton(title: "Save", target: self, action: #selector(save))
+        let saveBtn = NSButton(title: L("save"), target: self, action: #selector(save))
         saveBtn.frame = NSRect(x: 300, y: 20, width: 80, height: 28)
         view.addSubview(saveBtn)
-        let cancelBtn = NSButton(title: "Cancel", target: self, action: #selector(cancel))
+        let cancelBtn = NSButton(title: L("cancel"), target: self, action: #selector(cancel))
         cancelBtn.frame = NSRect(x: 210, y: 20, width: 80, height: 28)
         view.addSubview(cancelBtn)
     }
@@ -436,8 +433,8 @@ class FoldersPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Folders"
-        setupTable(label: "Favorite Folders", columns: [("Name", 150), ("Path", 400)])
+        self.title = L("foldersTab")
+        setupTable(label: L("favoriteFolders"), columns: [(L("name"), 150), (L("path"), 400)])
     }
 
     private func setupTable(label: String, columns: [(String, CGFloat)]) {
@@ -446,10 +443,10 @@ class FoldersPreferencesViewController: NSViewController {
         labelField.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
         view.addSubview(labelField)
 
-        let addButton = NSButton(title: "Add", target: self, action: #selector(addItem))
+        let addButton = NSButton(title: L("add"), target: self, action: #selector(addItem))
         addButton.frame = NSRect(x: 20, y: 400, width: 80, height: 28)
         view.addSubview(addButton)
-        let removeButton = NSButton(title: "Remove", target: self, action: #selector(removeItem))
+        let removeButton = NSButton(title: L("remove"), target: self, action: #selector(removeItem))
         removeButton.frame = NSRect(x: 110, y: 400, width: 80, height: 28)
         view.addSubview(removeButton)
 
@@ -458,10 +455,10 @@ class FoldersPreferencesViewController: NSViewController {
         scrollView.borderType = .bezelBorder
         tableView = NSTableView()
         tableView.allowsMultipleSelection = false
-        for (name, width) in columns {
+        for (name, w) in columns {
             let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(name.lowercased()))
             col.title = name
-            col.width = width
+            col.width = w
             tableView.addTableColumn(col)
         }
         tableView.headerView = NSTableHeaderView()
@@ -476,7 +473,7 @@ class FoldersPreferencesViewController: NSViewController {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = "Choose a folder"
+        panel.message = L("chooseFolder")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let folder = FavoriteFolder(id: UUID().uuidString, name: url.lastPathComponent, path: url.path)
         configManager.config.favoriteFolders.append(folder)
@@ -519,16 +516,16 @@ class DirectoriesPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Directories"
-        let labelField = NSTextField(labelWithString: "Favorite Directories")
+        self.title = L("directoriesTab")
+        let labelField = NSTextField(labelWithString: L("favoriteDirectories"))
         labelField.font = NSFont.boldSystemFont(ofSize: 13)
         labelField.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
         view.addSubview(labelField)
 
-        let addButton = NSButton(title: "Add", target: self, action: #selector(addItem))
+        let addButton = NSButton(title: L("add"), target: self, action: #selector(addItem))
         addButton.frame = NSRect(x: 20, y: 400, width: 80, height: 28)
         view.addSubview(addButton)
-        let removeButton = NSButton(title: "Remove", target: self, action: #selector(removeItem))
+        let removeButton = NSButton(title: L("remove"), target: self, action: #selector(removeItem))
         removeButton.frame = NSRect(x: 110, y: 400, width: 80, height: 28)
         view.addSubview(removeButton)
 
@@ -537,7 +534,7 @@ class DirectoriesPreferencesViewController: NSViewController {
         scrollView.borderType = .bezelBorder
         tableView = NSTableView()
         tableView.allowsMultipleSelection = false
-        for (name, w) in [("Name", 150), ("Path", 400)] {
+        for (name, w) in [(L("name"), 150), (L("path"), 400)] {
             let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(name.lowercased()))
             col.title = name
             col.width = CGFloat(w)
@@ -555,7 +552,7 @@ class DirectoriesPreferencesViewController: NSViewController {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = "Choose a directory"
+        panel.message = L("chooseDirectoryPanel")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let dir = FavoriteDirectory(id: UUID().uuidString, name: url.lastPathComponent, path: url.path)
         configManager.config.favoriteDirectories.append(dir)
@@ -598,16 +595,16 @@ class ScriptsPreferencesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Scripts"
-        let labelField = NSTextField(labelWithString: "Custom Scripts")
+        self.title = L("scriptsTab")
+        let labelField = NSTextField(labelWithString: L("customScripts"))
         labelField.font = NSFont.boldSystemFont(ofSize: 13)
         labelField.frame = NSRect(x: 20, y: 430, width: 200, height: 20)
         view.addSubview(labelField)
 
-        let addButton = NSButton(title: "Add", target: self, action: #selector(addItem))
+        let addButton = NSButton(title: L("add"), target: self, action: #selector(addItem))
         addButton.frame = NSRect(x: 20, y: 400, width: 80, height: 28)
         view.addSubview(addButton)
-        let removeButton = NSButton(title: "Remove", target: self, action: #selector(removeItem))
+        let removeButton = NSButton(title: L("remove"), target: self, action: #selector(removeItem))
         removeButton.frame = NSRect(x: 110, y: 400, width: 80, height: 28)
         view.addSubview(removeButton)
 
@@ -616,7 +613,7 @@ class ScriptsPreferencesViewController: NSViewController {
         scrollView.borderType = .bezelBorder
         tableView = NSTableView()
         tableView.allowsMultipleSelection = false
-        for (name, w) in [("Name", 150), ("Type", 80), ("Source", 340)] {
+        for (name, w) in [(L("name"), 150), (L("type"), 80), (L("source"), 340)] {
             let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(name.lowercased()))
             col.title = name
             col.width = CGFloat(w)
@@ -710,7 +707,7 @@ class ScriptEditorSheet: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let nameLabel = NSTextField(labelWithString: "Name:")
+        let nameLabel = NSTextField(labelWithString: L("scriptName"))
         nameLabel.frame = NSRect(x: 20, y: 260, width: 60, height: 20)
         view.addSubview(nameLabel)
 
@@ -718,7 +715,7 @@ class ScriptEditorSheet: NSViewController {
         nameField.stringValue = editingScript?.name ?? ""
         view.addSubview(nameField)
 
-        let typeLabel = NSTextField(labelWithString: "Type:")
+        let typeLabel = NSTextField(labelWithString: L("scriptType"))
         typeLabel.frame = NSRect(x: 20, y: 228, width: 60, height: 20)
         view.addSubview(typeLabel)
 
@@ -729,7 +726,7 @@ class ScriptEditorSheet: NSViewController {
         }
         view.addSubview(typePopup)
 
-        let sourceLabel = NSTextField(labelWithString: "Source:")
+        let sourceLabel = NSTextField(labelWithString: L("scriptSource"))
         sourceLabel.frame = NSRect(x: 20, y: 198, width: 60, height: 20)
         view.addSubview(sourceLabel)
 
@@ -742,11 +739,11 @@ class ScriptEditorSheet: NSViewController {
         scrollView.documentView = sourceField
         view.addSubview(scrollView)
 
-        let saveButton = NSButton(title: "Save", target: self, action: #selector(save))
+        let saveButton = NSButton(title: L("save"), target: self, action: #selector(save))
         saveButton.frame = NSRect(x: 280, y: 20, width: 80, height: 28)
         view.addSubview(saveButton)
 
-        let cancelButton = NSButton(title: "Cancel", target: self, action: #selector(cancel))
+        let cancelButton = NSButton(title: L("cancel"), target: self, action: #selector(cancel))
         cancelButton.frame = NSRect(x: 190, y: 20, width: 80, height: 28)
         view.addSubview(cancelButton)
     }

@@ -102,7 +102,7 @@ enum ActionDispatcher {
         } catch {
             await MainActor.run {
                 let alert = NSAlert()
-                alert.messageText = "Action Failed"
+                alert.messageText = L("actionFailed")
                 alert.informativeText = "\(error)"
                 alert.alertStyle = .warning
                 alert.runModal()

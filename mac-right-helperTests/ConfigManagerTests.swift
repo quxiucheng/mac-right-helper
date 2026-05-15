@@ -69,4 +69,18 @@ final class ConfigManagerTests: XCTestCase {
         XCTAssertTrue(manager2.config.settings.hideStatusBarIcon)
         XCTAssertEqual(manager2.config.settings.terminalOpenMode, .newTab)
     }
+
+    func testLanguageDefault() {
+        let manager = ConfigManager()
+        XCTAssertEqual(manager.config.settings.language, .chinese)
+    }
+
+    func testLanguageRoundtrip() {
+        let manager = ConfigManager()
+        manager.config.settings.language = .english
+        manager.save()
+
+        let manager2 = ConfigManager()
+        XCTAssertEqual(manager2.config.settings.language, .english)
+    }
 }

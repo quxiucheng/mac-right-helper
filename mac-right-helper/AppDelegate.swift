@@ -47,9 +47,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func checkPermissions() {
         let manager = PermissionManager()
         if manager.fullDiskAccessStatus != .granted {
-            showPermissionAlert(title: "Full Disk Access Required",
-                                info: "mac-right-helper needs Full Disk Access to operate on files in protected locations. Please enable it in System Settings.",
-                                url: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+            showPermissionAlert(
+                title: L("fullDiskAccessRequired"),
+                info: L("fullDiskAccessInfo"),
+                url: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
+            )
         }
     }
 
@@ -58,8 +60,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.messageText = title
         alert.informativeText = info
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Open Settings")
-        alert.addButton(withTitle: "Later")
+        alert.addButton(withTitle: L("openSettings"))
+        alert.addButton(withTitle: L("later"))
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             if let url = URL(string: url) {

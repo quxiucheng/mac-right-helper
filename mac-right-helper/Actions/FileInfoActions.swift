@@ -21,11 +21,11 @@ struct ShowFileInfoAction: ActionHandler {
             NSPasteboard.general.setString(info, forType: .string)
 
             let alert = NSAlert()
-            alert.messageText = "File Information"
+            alert.messageText = L("fileInformation")
             alert.informativeText = info
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "Copy to Clipboard")
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: L("copyToClipboard"))
+            alert.addButton(withTitle: L("ok"))
             let response = alert.runModal()
             if response == .alertFirstButtonReturn {
                 NSPasteboard.general.clearContents()

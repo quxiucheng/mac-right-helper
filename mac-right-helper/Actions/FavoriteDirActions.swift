@@ -8,12 +8,12 @@ struct FavoriteDirPickerAction: ActionHandler {
 
         let dest = await MainActor.run { () -> FavoriteDirectory? in
             let alert = NSAlert()
-            alert.messageText = "Go to Directory"
-            alert.informativeText = "Choose a directory to open:"
+            alert.messageText = L("goToDirectory")
+            alert.informativeText = L("chooseDirectory")
             for dir in dirs {
                 alert.addButton(withTitle: dir.name)
             }
-            alert.addButton(withTitle: "Cancel")
+            alert.addButton(withTitle: L("cancel"))
             let response = alert.runModal()
             let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
             if index >= 0 && index < dirs.count {

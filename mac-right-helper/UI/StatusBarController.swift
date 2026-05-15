@@ -13,18 +13,18 @@ class StatusBarController {
 
     private func setupMenu() {
         guard let button = statusItem.button else { return }
-        button.image = NSImage(systemSymbolName: "hand.point.up.left", accessibilityDescription: "Right Click Helper")
+        button.image = NSImage(systemSymbolName: "hand.point.up.left", accessibilityDescription: L("appName"))
 
         menu = NSMenu()
-        let preferencesItem = NSMenuItem(title: "Preferences...", action: #selector(showPreferences), keyEquivalent: ",")
+        let preferencesItem = NSMenuItem(title: L("preferences"), action: #selector(showPreferences), keyEquivalent: ",")
         preferencesItem.target = self
         menu.addItem(preferencesItem)
         menu.addItem(NSMenuItem.separator())
-        let reloadItem = NSMenuItem(title: "Reload Services", action: #selector(reloadServices), keyEquivalent: "r")
+        let reloadItem = NSMenuItem(title: L("reloadServices"), action: #selector(reloadServices), keyEquivalent: "r")
         reloadItem.target = self
         menu.addItem(reloadItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: L("quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         button.action = #selector(handleClick)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])

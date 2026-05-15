@@ -9,8 +9,8 @@ struct IShotScreenshotAction: ActionHandler {
         } else {
             await MainActor.run {
                 let alert = NSAlert()
-                alert.messageText = "iShot Not Installed"
-                alert.informativeText = "Please install iShot from the App Store."
+                alert.messageText = L("iShotNotInstalled")
+                alert.informativeText = L("iShotNotInstalledInfo")
                 alert.alertStyle = .informational
                 alert.runModal()
             }
@@ -28,8 +28,8 @@ struct IShotAnnotateAction: ActionHandler {
         } else {
             await MainActor.run {
                 let alert = NSAlert()
-                alert.messageText = "iShot Not Installed"
-                alert.informativeText = "Please install iShot from the App Store."
+                alert.messageText = L("iShotNotInstalled")
+                alert.informativeText = L("iShotNotInstalledInfo")
                 alert.alertStyle = .informational
                 alert.runModal()
             }

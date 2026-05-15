@@ -8,8 +8,8 @@ struct SendToPickerAction: ActionHandler {
         guard !folders.isEmpty else {
             await MainActor.run {
                 let alert = NSAlert()
-                alert.messageText = "No Favorite Folders"
-                alert.informativeText = "Please add favorite folders in Preferences first."
+                alert.messageText = L("noFavoriteFolders")
+                alert.informativeText = L("noFavoriteFoldersInfo")
                 alert.alertStyle = .informational
                 alert.runModal()
             }
@@ -18,12 +18,12 @@ struct SendToPickerAction: ActionHandler {
 
         let dest = await MainActor.run { () -> FavoriteFolder? in
             let alert = NSAlert()
-            alert.messageText = "Send to"
-            alert.informativeText = "Choose a destination folder:"
+            alert.messageText = L("sendTo")
+            alert.informativeText = L("chooseDestinationFolder")
             for folder in folders {
                 alert.addButton(withTitle: folder.name)
             }
-            alert.addButton(withTitle: "Cancel")
+            alert.addButton(withTitle: L("cancel"))
             let response = alert.runModal()
             let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
             if index >= 0 && index < folders.count {
