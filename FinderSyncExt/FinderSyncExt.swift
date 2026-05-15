@@ -136,7 +136,7 @@ class FinderSyncExt: FIFinderSync {
     // MARK: - Tag management
 
     private func assignTag(for rid: String) -> Int {
-        var tag: Int
+        var tag = 0
         var maxAttempts = 100
         tagQueue.sync {
             repeat {
