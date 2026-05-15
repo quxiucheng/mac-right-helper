@@ -35,7 +35,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -56,7 +56,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -77,7 +77,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -99,7 +99,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -121,7 +121,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -143,7 +143,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -165,7 +165,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -186,7 +186,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -208,7 +208,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -230,7 +230,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -251,7 +251,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -273,7 +273,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -294,7 +294,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -315,7 +315,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -337,7 +337,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -358,7 +358,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -379,7 +379,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -401,7 +401,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -423,7 +423,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -445,7 +445,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -467,7 +467,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -489,7 +489,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -511,7 +511,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -533,7 +533,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -555,7 +555,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSRequiredContext</key>
 			<dict>
 				<key>NSTextContent</key>
@@ -581,7 +581,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -603,7 +603,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -624,7 +624,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -645,7 +645,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -666,7 +666,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -687,7 +687,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -709,7 +709,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSRequiredContext</key>
 			<dict>
 				<key>NSTextContent</key>
@@ -735,7 +735,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSRequiredContext</key>
 			<dict>
 				<key>NSTextContent</key>
@@ -761,7 +761,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSRequiredContext</key>
 			<dict>
 				<key>NSTextContent</key>
@@ -787,7 +787,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -808,7 +808,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -829,7 +829,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -850,7 +850,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -871,7 +871,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -892,7 +892,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>
@@ -913,7 +913,7 @@
 			<key>NSMessage</key>
 			<string>handleService</string>
 			<key>NSPortName</key>
-			<string>mac-right-helper</string>
+			<string>com.example.mac-right-helper</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.item</string>

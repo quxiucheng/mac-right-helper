@@ -46,7 +46,8 @@ find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
     -o "${TMP_DIR}/${APP_NAME}_arm64" \
     -framework Foundation \
     -framework AppKit \
-    -framework ApplicationServices
+    -framework ApplicationServices \
+    -framework CoreServices
 
 echo "  → Building x86_64..."
 find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
@@ -56,7 +57,8 @@ find "${SRC_DIR}" -name "*.swift" -print0 | xargs -0 swiftc \
     -o "${TMP_DIR}/${APP_NAME}_x86_64" \
     -framework Foundation \
     -framework AppKit \
-    -framework ApplicationServices
+    -framework ApplicationServices \
+    -framework CoreServices
 
 echo "  → Creating universal binary..."
 lipo -create \
