@@ -49,6 +49,7 @@ class StatusBarController {
     }
 
     @objc func reloadServices() {
-        NSUpdateDynamicServices()
+        // Sync action config to Finder Sync Extension
+        (NSApp.delegate as? AppDelegate)?.syncActionsToExtension()
     }
 }
