@@ -13,7 +13,7 @@ class StatusBarController {
 
     private func setupMenu() {
         guard let button = statusItem.button else { return }
-        button.image = NSImage(systemSymbolName: "hand.point.up.left", accessibilityDescription: L("appName"))
+        button.image = NSImage(systemSymbolName: "list.bullet.rectangle", accessibilityDescription: L("appName"))
 
         menu = NSMenu()
         let preferencesItem = NSMenuItem(title: L("preferences"), action: #selector(showPreferences), keyEquivalent: ",")

@@ -3,13 +3,16 @@ import Cocoa
 class PreferencesWindowController: NSWindowController {
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 700, height: 520),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 560),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
+        window.minSize = NSSize(width: 600, height: 450)
         window.title = L("preferences")
         window.center()
+        window.setFrameAutosaveName("PreferencesWindow")
+        window.tabbingMode = .disallowed
         self.init(window: window)
         window.contentViewController = PreferencesTabViewController()
     }
@@ -18,17 +21,18 @@ class PreferencesWindowController: NSWindowController {
 class PreferencesTabViewController: NSTabViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        addTab(GeneralPreferencesViewController(), label: L("generalTab"))
-        addTab(ActionsPreferencesViewController(), label: L("actionsTab"))
-        addTab(TemplatesPreferencesViewController(), label: L("templatesTab"))
-        addTab(FoldersPreferencesViewController(), label: L("foldersTab"))
-        addTab(DirectoriesPreferencesViewController(), label: L("directoriesTab"))
-        addTab(ScriptsPreferencesViewController(), label: L("scriptsTab"))
+        addTab(GeneralPreferencesViewController(), label: L("generalTab"), symbolName: "gearshape")
+        addTab(ActionsPreferencesViewController(), label: L("actionsTab"), symbolName: "checklist")
+        addTab(TemplatesPreferencesViewController(), label: L("templatesTab"), symbolName: "doc.text")
+        addTab(FoldersPreferencesViewController(), label: L("foldersTab"), symbolName: "folder")
+        addTab(DirectoriesPreferencesViewController(), label: L("directoriesTab"), symbolName: "externaldrive")
+        addTab(ScriptsPreferencesViewController(), label: L("scriptsTab"), symbolName: "terminal")
     }
 
-    private func addTab(_ vc: NSViewController, label: String) {
+    private func addTab(_ vc: NSViewController, label: String, symbolName: String) {
         let item = NSTabViewItem(viewController: vc)
         item.label = label
+        item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: label)
         vc.title = label
         super.addTabViewItem(item)
     }
@@ -48,47 +52,22 @@ class GeneralPreferencesViewController: NSViewController {
         self.title = L("generalTab")
         let settings = configManager.config.settings
 
-        var y: CGFloat = 420
-
         let hideIconCheckbox = NSButton(checkboxWithTitle: L("hideStatusBarIcon"), target: self, action: #selector(toggleHideIcon(_:)))
         hideIconCheckbox.state = settings.hideStatusBarIcon ? .on : .off
-        hideIconCheckbox.frame = NSRect(x: 20, y: y, width: 300, height: 22)
-        view.addSubview(hideIconCheckbox)
-        y -= 36
 
-        let trashLabel = NSTextField(labelWithString: L("trashConfirmation"))
-        trashLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
-        view.addSubview(trashLabel)
         let trashCheckbox = NSButton(checkboxWithTitle: L("trashConfirmDesc"), target: self, action: #selector(toggleTrashConfirm(_:)))
         trashCheckbox.state = settings.trashConfirm ? .on : .off
-        trashCheckbox.frame = NSRect(x: 160, y: y, width: 400, height: 22)
-        view.addSubview(trashCheckbox)
-        y -= 36
 
-        let cutLabel = NSTextField(labelWithString: L("cutBehavior"))
-        cutLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
-        view.addSubview(cutLabel)
         let cutCheckbox = NSButton(checkboxWithTitle: L("cutHideDesc"), target: self, action: #selector(toggleCutHide(_:)))
         cutCheckbox.state = settings.cutHideFiles ? .on : .off
-        cutCheckbox.frame = NSRect(x: 160, y: y, width: 400, height: 22)
-        view.addSubview(cutCheckbox)
-        y -= 36
 
-        let terminalLabel = NSTextField(labelWithString: L("terminalOpenMode"))
-        terminalLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
-        view.addSubview(terminalLabel)
-        let terminalPopup = NSPopUpButton(frame: NSRect(x: 160, y: y, width: 180, height: 24))
+        let terminalPopup = NSPopUpButton(frame: .zero, pullsDown: false)
         terminalPopup.addItems(withTitles: [L("newWindow"), L("newTab")])
         terminalPopup.selectItem(at: settings.terminalOpenMode == .newWindow ? 0 : 1)
         terminalPopup.target = self
         terminalPopup.action = #selector(terminalModeChanged(_:))
-        view.addSubview(terminalPopup)
-        y -= 44
 
-        let editorLabel = NSTextField(labelWithString: L("defaultEditor"))
-        editorLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
-        view.addSubview(editorLabel)
-        let editorPopup = NSPopUpButton(frame: NSRect(x: 160, y: y, width: 280, height: 24))
+        let editorPopup = NSPopUpButton(frame: .zero, pullsDown: false)
         for editor in EditorConfig.allEditors {
             editorPopup.addItem(withTitle: editor.name)
         }
@@ -97,18 +76,66 @@ class GeneralPreferencesViewController: NSViewController {
         }
         editorPopup.target = self
         editorPopup.action = #selector(defaultEditorChanged(_:))
-        view.addSubview(editorPopup)
-        y -= 44
 
-        let langLabel = NSTextField(labelWithString: L("languageLabel"))
-        langLabel.frame = NSRect(x: 20, y: y, width: 140, height: 20)
-        view.addSubview(langLabel)
-        let langPopup = NSPopUpButton(frame: NSRect(x: 160, y: y, width: 180, height: 24))
+        let langPopup = NSPopUpButton(frame: .zero, pullsDown: false)
         langPopup.addItems(withTitles: ["中文", "English"])
         langPopup.selectItem(at: settings.language == .chinese ? 0 : 1)
         langPopup.target = self
         langPopup.action = #selector(languageChanged(_:))
-        view.addSubview(langPopup)
+
+        let contentStack = NSStackView()
+        contentStack.orientation = .vertical
+        contentStack.spacing = 24
+        contentStack.alignment = .leading
+        contentStack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(contentStack)
+        NSLayoutConstraint.activate([
+            contentStack.topAnchor.constraint(equalTo: view.topAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+
+        contentStack.addArrangedSubview(Self.sectionHeader(L("appearanceSection")))
+        contentStack.addArrangedSubview(Self.checkboxRow(hideIconCheckbox))
+
+        contentStack.addArrangedSubview(Self.sectionHeader(L("fileOperationsSection")))
+        contentStack.addArrangedSubview(Self.labeledRow(L("trashConfirmation"), trashCheckbox))
+        contentStack.addArrangedSubview(Self.labeledRow(L("cutBehavior"), cutCheckbox))
+
+        contentStack.addArrangedSubview(Self.sectionHeader(L("terminalEditorSection")))
+        contentStack.addArrangedSubview(Self.labeledRow(L("terminalOpenMode"), terminalPopup))
+        contentStack.addArrangedSubview(Self.labeledRow(L("defaultEditor"), editorPopup))
+
+        contentStack.addArrangedSubview(Self.sectionHeader(L("languageSection")))
+        contentStack.addArrangedSubview(Self.labeledRow(L("languageLabel"), langPopup))
+    }
+
+    private static func sectionHeader(_ title: String) -> NSTextField {
+        let header = NSTextField(labelWithString: title)
+        header.font = NSFont.boldSystemFont(ofSize: 11)
+        header.textColor = .secondaryLabelColor
+        return header
+    }
+
+    private static func labeledRow(_ labelText: String, _ control: NSView) -> NSStackView {
+        let label = NSTextField(labelWithString: labelText)
+        label.alignment = .right
+        label.widthAnchor.constraint(equalToConstant: 140).isActive = true
+        let row = NSStackView(views: [label, control])
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        return row
+    }
+
+    private static func checkboxRow(_ checkbox: NSButton) -> NSStackView {
+        let spacer = NSView()
+        spacer.widthAnchor.constraint(equalToConstant: 148).isActive = true
+        let row = NSStackView(views: [spacer, checkbox])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        return row
     }
 
     @objc private func toggleHideIcon(_ sender: NSButton) {
@@ -214,21 +241,14 @@ extension ActionsPreferencesViewController: NSTableViewDataSource, NSTableViewDe
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let key = sortedKeys[row]
         guard let config = configManager.config.builtinItems[key] else { return nil }
-        let cell = NSTableCellView()
+        let cell = PaddedTableCellView()
         switch tableColumn?.identifier.rawValue {
         case "enabled":
-            let checkbox = NSButton(checkboxWithTitle: "", target: self, action: #selector(toggleEnabled(_:)))
-            checkbox.state = config.enabled ? .on : .off
-            checkbox.tag = row
-            cell.addSubview(checkbox)
+            cell.configureCheckbox(state: config.enabled ? .on : .off, tag: row, target: self, action: #selector(toggleEnabled(_:)))
         case "name":
-            let text = NSTextField(labelWithString: displayName(for: key))
-            cell.textField = text
-            cell.addSubview(text)
+            cell.configure(with: displayName(for: key))
         case "group":
-            let text = NSTextField(labelWithString: L("group" + config.group))
-            cell.textField = text
-            cell.addSubview(text)
+            cell.configure(with: L("group" + config.group))
         default:
             return nil
         }
@@ -339,17 +359,11 @@ extension TemplatesPreferencesViewController: NSTableViewDataSource, NSTableView
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let template = configManager.config.templates[row]
-        let cell = NSTableCellView()
+        let cell = PaddedTableCellView()
         switch tableColumn?.identifier.rawValue {
-        case "name":
-            let text = NSTextField(labelWithString: template.name)
-            cell.textField = text; cell.addSubview(text)
-        case "extension":
-            let text = NSTextField(labelWithString: template.ext)
-            cell.textField = text; cell.addSubview(text)
-        case "content":
-            let text = NSTextField(labelWithString: template.content)
-            cell.textField = text; cell.addSubview(text)
+        case "name": cell.configure(with: template.name)
+        case "extension": cell.configure(with: template.ext)
+        case "content": cell.configure(with: template.content)
         default: return nil
         }
         return cell
@@ -370,39 +384,68 @@ class TemplateEditorSheet: NSViewController {
     required init?(coder: NSCoder) { fatalError() }
 
     override func loadView() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 280))
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 340))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        var y: CGFloat = 240
-        for (label, field, w) in [(L("templateName"), nameField, 120), (L("templateExtension"), extField, 80)] {
-            let lbl = NSTextField(labelWithString: label)
-            lbl.frame = NSRect(x: 20, y: y, width: 80, height: 20)
-            view.addSubview(lbl)
-            field.frame = NSRect(x: 110, y: y - 2, width: CGFloat(w), height: 22)
-            view.addSubview(field)
-            y -= 34
-        }
         nameField.stringValue = editing?.name ?? ""
         extField.stringValue = editing?.ext ?? ""
 
-        let srcLabel = NSTextField(labelWithString: L("templateContent"))
-        srcLabel.frame = NSRect(x: 20, y: y, width: 80, height: 20)
-        view.addSubview(srcLabel)
-        let scroll = NSScrollView(frame: NSRect(x: 110, y: 60, width: 270, height: y - 70))
-        scroll.hasVerticalScroller = true
-        scroll.borderType = .bezelBorder
+        let nameRow = Self.fieldRow(label: L("templateName"), field: nameField, fieldWidth: 200)
+        let extRow = Self.fieldRow(label: L("templateExtension"), field: extField, fieldWidth: 100)
+
+        let contentLabel = NSTextField(labelWithString: L("templateContent"))
+        contentLabel.alignment = .right
+        contentLabel.widthAnchor.constraint(equalToConstant: 80).isActive = true
+
+        let contentScroll = NSScrollView()
+        contentScroll.hasVerticalScroller = true
+        contentScroll.borderType = .bezelBorder
         contentField.string = editing?.content ?? ""
-        scroll.documentView = contentField
-        view.addSubview(scroll)
+        contentField.isEditable = true
+        contentField.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        contentScroll.documentView = contentField
+        contentScroll.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        let contentRow = NSStackView(views: [contentLabel, contentScroll])
+        contentRow.orientation = .horizontal
+        contentRow.spacing = 8
+        contentRow.alignment = .top
 
         let saveBtn = NSButton(title: L("save"), target: self, action: #selector(save))
-        saveBtn.frame = NSRect(x: 300, y: 20, width: 80, height: 28)
-        view.addSubview(saveBtn)
+        saveBtn.keyEquivalent = "\r"
         let cancelBtn = NSButton(title: L("cancel"), target: self, action: #selector(cancel))
-        cancelBtn.frame = NSRect(x: 210, y: 20, width: 80, height: 28)
-        view.addSubview(cancelBtn)
+        let buttonRow = NSStackView(views: [cancelBtn, saveBtn])
+        buttonRow.orientation = .horizontal
+        buttonRow.spacing = 12
+        buttonRow.alignment = .centerY
+        buttonRow.distribution = .fill
+
+        let stack = NSStackView(views: [nameRow, extRow, contentRow, buttonRow])
+        stack.orientation = .vertical
+        stack.spacing = 16
+        stack.alignment = .leading
+        stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            buttonRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+        ])
+    }
+
+    private static func fieldRow(label: String, field: NSControl, fieldWidth: CGFloat) -> NSStackView {
+        let lbl = NSTextField(labelWithString: label)
+        lbl.alignment = .right
+        lbl.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        field.widthAnchor.constraint(equalToConstant: fieldWidth).isActive = true
+        let row = NSStackView(views: [lbl, field])
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        return row
     }
 
     @objc private func save() {
@@ -496,10 +539,8 @@ extension FoldersPreferencesViewController: NSTableViewDataSource, NSTableViewDe
     }
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let folder = configManager.config.favoriteFolders[row]
-        let cell = NSTableCellView()
-        let text = NSTextField(labelWithString: tableColumn?.identifier.rawValue == "name" ? folder.name : folder.path)
-        cell.textField = text
-        cell.addSubview(text)
+        let cell = PaddedTableCellView()
+        cell.configure(with: tableColumn?.identifier.rawValue == "name" ? folder.name : folder.path)
         return cell
     }
 }
@@ -575,10 +616,8 @@ extension DirectoriesPreferencesViewController: NSTableViewDataSource, NSTableVi
     }
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let dir = configManager.config.favoriteDirectories[row]
-        let cell = NSTableCellView()
-        let text = NSTextField(labelWithString: tableColumn?.identifier.rawValue == "name" ? dir.name : dir.path)
-        cell.textField = text
-        cell.addSubview(text)
+        let cell = PaddedTableCellView()
+        cell.configure(with: tableColumn?.identifier.rawValue == "name" ? dir.name : dir.path)
         return cell
     }
 }
@@ -666,17 +705,13 @@ extension ScriptsPreferencesViewController: NSTableViewDataSource, NSTableViewDe
     }
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let script = configManager.config.customScripts[row]
-        let cell = NSTableCellView()
-        let text: String
+        let cell = PaddedTableCellView()
         switch tableColumn?.identifier.rawValue {
-        case "name": text = script.name
-        case "type": text = script.type.rawValue
-        case "source": text = script.source
-        default: text = ""
+        case "name": cell.configure(with: script.name)
+        case "type": cell.configure(with: script.type.rawValue)
+        case "source": cell.configure(with: script.source)
+        default: break
         }
-        let field = NSTextField(labelWithString: text)
-        cell.textField = field
-        cell.addSubview(field)
         return cell
     }
 }
@@ -701,51 +736,79 @@ class ScriptEditorSheet: NSViewController {
     }
 
     override func loadView() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 340))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        let nameLabel = NSTextField(labelWithString: L("scriptName"))
-        nameLabel.frame = NSRect(x: 20, y: 260, width: 60, height: 20)
-        view.addSubview(nameLabel)
-
-        nameField.frame = NSRect(x: 90, y: 258, width: 290, height: 22)
         nameField.stringValue = editingScript?.name ?? ""
-        view.addSubview(nameField)
+
+        let nameRow = Self.fieldRow(label: L("scriptName"), field: nameField, fieldWidth: 290)
 
         let typeLabel = NSTextField(labelWithString: L("scriptType"))
-        typeLabel.frame = NSRect(x: 20, y: 228, width: 60, height: 20)
-        view.addSubview(typeLabel)
-
-        typePopup.frame = NSRect(x: 90, y: 226, width: 120, height: 24)
+        typeLabel.alignment = .right
+        typeLabel.widthAnchor.constraint(equalToConstant: 80).isActive = true
         typePopup.addItems(withTitles: ["shell", "python", "appleScript"])
         if let script = editingScript {
             typePopup.selectItem(withTitle: script.type.rawValue)
         }
-        view.addSubview(typePopup)
+        let typeRow = NSStackView(views: [typeLabel, typePopup])
+        typeRow.orientation = .horizontal
+        typeRow.spacing = 8
+        typeRow.alignment = .centerY
 
         let sourceLabel = NSTextField(labelWithString: L("scriptSource"))
-        sourceLabel.frame = NSRect(x: 20, y: 198, width: 60, height: 20)
-        view.addSubview(sourceLabel)
+        sourceLabel.alignment = .right
+        sourceLabel.widthAnchor.constraint(equalToConstant: 80).isActive = true
 
-        let scrollView = NSScrollView(frame: NSRect(x: 90, y: 60, width: 290, height: 150))
+        let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
         scrollView.borderType = .bezelBorder
         sourceField.isEditable = true
         sourceField.isSelectable = true
         sourceField.string = editingScript?.source ?? ""
+        sourceField.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         scrollView.documentView = sourceField
-        view.addSubview(scrollView)
+        scrollView.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        let sourceRow = NSStackView(views: [sourceLabel, scrollView])
+        sourceRow.orientation = .horizontal
+        sourceRow.spacing = 8
+        sourceRow.alignment = .top
 
         let saveButton = NSButton(title: L("save"), target: self, action: #selector(save))
-        saveButton.frame = NSRect(x: 280, y: 20, width: 80, height: 28)
-        view.addSubview(saveButton)
-
+        saveButton.keyEquivalent = "\r"
         let cancelButton = NSButton(title: L("cancel"), target: self, action: #selector(cancel))
-        cancelButton.frame = NSRect(x: 190, y: 20, width: 80, height: 28)
-        view.addSubview(cancelButton)
+        let buttonRow = NSStackView(views: [cancelButton, saveButton])
+        buttonRow.orientation = .horizontal
+        buttonRow.spacing = 12
+        buttonRow.alignment = .centerY
+        buttonRow.distribution = .fill
+
+        let stack = NSStackView(views: [nameRow, typeRow, sourceRow, buttonRow])
+        stack.orientation = .vertical
+        stack.spacing = 16
+        stack.alignment = .leading
+        stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            buttonRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+        ])
+    }
+
+    private static func fieldRow(label: String, field: NSControl, fieldWidth: CGFloat) -> NSStackView {
+        let lbl = NSTextField(labelWithString: label)
+        lbl.alignment = .right
+        lbl.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        field.widthAnchor.constraint(equalToConstant: fieldWidth).isActive = true
+        let row = NSStackView(views: [lbl, field])
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        return row
     }
 
     @objc private func save() {

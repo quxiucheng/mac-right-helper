@@ -20,6 +20,10 @@ class LocalizationManager {
 
         // General Tab
         "generalTab": [.chinese: "通用设置", .english: "General"],
+        "appearanceSection": [.chinese: "外观", .english: "Appearance"],
+        "fileOperationsSection": [.chinese: "文件操作", .english: "File Operations"],
+        "terminalEditorSection": [.chinese: "终端与编辑器", .english: "Terminal & Editor"],
+        "languageSection": [.chinese: "语言", .english: "Language"],
         "hideStatusBarIcon": [.chinese: "隐藏菜单栏图标", .english: "Hide status bar icon"],
         "trashConfirmation": [.chinese: "删除确认：", .english: "Trash confirmation:"],
         "trashConfirmDesc": [.chinese: "永久删除前显示确认", .english: "Show confirmation before permanently deleting"],
