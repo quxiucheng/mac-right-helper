@@ -86,6 +86,18 @@ class LocalizationManager {
         "iShotNotInstalledInfo": [.chinese: "请从 App Store 安装 iShot。", .english: "Please install iShot from the App Store."],
         "restartToApply": [.chinese: "部分更改需要重启 Finder 或应用才能生效。", .english: "Some changes require restarting Finder or the app to take effect."],
 
+        // Main Panel
+        "mainPanelSubtitle": [.chinese: "右键增强，触手可及", .english: "Right-click power at your fingertips"],
+        "statusSection": [.chinese: "状态", .english: "Status"],
+        "finderExtensionStatus": [.chinese: "Finder 扩展：", .english: "Finder Extension:"],
+        "fullDiskAccessStatus": [.chinese: "磁盘访问权限：", .english: "Full Disk Access:"],
+        "accessibilityStatus": [.chinese: "辅助功能权限：", .english: "Accessibility:"],
+        "enabledActionsCount": [.chinese: "已启用操作：", .english: "Enabled Actions:"],
+        "connected": [.chinese: "已连接", .english: "Connected"],
+        "disconnected": [.chinese: "等待连接", .english: "Waiting"],
+        "granted": [.chinese: "已授权", .english: "Granted"],
+        "notGranted": [.chinese: "未授权", .english: "Not Granted"],
+
         // Groups
         "groupFile": [.chinese: "文件", .english: "File"],
         "groupDev": [.chinese: "开发", .english: "Dev"],

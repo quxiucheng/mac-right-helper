@@ -2,8 +2,9 @@ import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
+    private(set) var mainPanelController: MainPanelController?
     private let messager = Messager.shared
-    private var extensionRunning = false
+    private(set) var extensionRunning = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if !ConfigManager.shared.config.settings.hideStatusBarIcon {
@@ -22,9 +23,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
-        // Show preferences window on launch
-        if let sc = statusBarController {
-            sc.showPreferences()
+        // Show main panel on launch
+        if statusBarController != nil {
+            showMainPanel()
         }
     }
 
@@ -42,6 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             extensionRunning = true
             // Re-sync config when extension comes online
             syncActionsToExtension()
+            mainPanelController?.refreshStatus()
 
         default:
             // Dispatch action to ActionDispatcher
@@ -191,8 +193,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             statusBarController = nil
         } else if statusBarController == nil {
             statusBarController = StatusBarController()
-            statusBarController?.showPreferences()
+            showMainPanel()
         }
+    }
+
+    // MARK: - Window management
+
+    func showMainPanel() {
+        if mainPanelController == nil {
+            mainPanelController = MainPanelController()
+        }
+        mainPanelController?.showWindow(nil)
+        mainPanelController?.refreshStatus()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func showPreferences() {
+        statusBarController?.openPreferences()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

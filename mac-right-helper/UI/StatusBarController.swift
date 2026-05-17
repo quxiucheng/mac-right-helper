@@ -16,7 +16,7 @@ class StatusBarController {
         button.image = NSImage(systemSymbolName: "list.bullet.rectangle", accessibilityDescription: L("appName"))
 
         menu = NSMenu()
-        let preferencesItem = NSMenuItem(title: L("preferences"), action: #selector(showPreferences), keyEquivalent: ",")
+        let preferencesItem = NSMenuItem(title: L("preferences"), action: #selector(openPreferences), keyEquivalent: ",")
         preferencesItem.target = self
         menu.addItem(preferencesItem)
         menu.addItem(NSMenuItem.separator())
@@ -36,11 +36,11 @@ class StatusBarController {
         if event.type == .rightMouseUp {
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 2), in: sender)
         } else {
-            showPreferences()
+            (NSApp.delegate as? AppDelegate)?.showMainPanel()
         }
     }
 
-    @objc func showPreferences() {
+    @objc func openPreferences() {
         if preferencesWindowController == nil {
             preferencesWindowController = PreferencesWindowController()
         }
@@ -49,7 +49,7 @@ class StatusBarController {
     }
 
     @objc func reloadServices() {
-        // Sync action config to Finder Sync Extension
         (NSApp.delegate as? AppDelegate)?.syncActionsToExtension()
+        (NSApp.delegate as? AppDelegate)?.mainPanelController?.refreshStatus()
     }
 }

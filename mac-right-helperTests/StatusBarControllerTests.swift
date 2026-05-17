@@ -17,10 +17,10 @@ final class StatusBarControllerTests: XCTestCase {
         XCTAssertEqual(items[4].title, L("quit"))
     }
 
-    func testShowPreferencesCreatesWindowController() {
+    func testOpenPreferencesCreatesWindowController() {
         let controller = StatusBarController()
         XCTAssertNil(controller.preferencesWindowController)
-        controller.showPreferences()
+        controller.openPreferences()
         XCTAssertNotNil(controller.preferencesWindowController)
     }
 
