@@ -135,6 +135,11 @@ class MainPanelViewController: NSViewController {
         actionCount.stringValue = String(count)
     }
 
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        refresh()
+    }
+
     @objc private func reloadServices() {
         (NSApp.delegate as? AppDelegate)?.syncActionsToExtension()
         refresh()

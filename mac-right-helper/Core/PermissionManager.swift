@@ -33,7 +33,12 @@ class PermissionManager {
 
     var accessibilityStatus: PermissionStatus {
         let opts = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: false] as CFDictionary
-        return AXIsProcessTrustedWithOptions(opts) ? .granted : .denied
+        let trusted = AXIsProcessTrustedWithOptions(opts)
+        if !trusted {
+            // Log path for debugging - helps identify path mismatch issues
+            NSLog("[mac-right-helper] Accessibility permission not granted for path: \(currentExecutablePath)")
+        }
+        return trusted ? .granted : .denied
     }
 
     /// Actively prompt the user to grant accessibility permission via the system dialog.
@@ -52,5 +57,10 @@ class PermissionManager {
     func openSystemPreferencesPrivacyAccessibility() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
         NSWorkspace.shared.open(url)
+    }
+
+    /// Returns the current executable path for debugging permission issues
+    var currentExecutablePath: String {
+        return Bundle.main.bundlePath
     }
 }

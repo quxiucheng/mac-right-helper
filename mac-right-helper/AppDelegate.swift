@@ -202,6 +202,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ipc.sendQuit()
     }
 
+    // MARK: - NSServices Support
+
+    @objc func handleRightHelperService(_ pboard: NSPasteboard, userData: String, error: AutoreleasingUnsafeMutablePointer<NSString?>) {
+        guard let urls = pboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty else {
+            error.pointee = "No files selected" as NSString
+            return
+        }
+        let paths = urls.map { $0.path }
+
+        // Parse action ID from userData or use default
+        let actionID = userData.isEmpty ? "copyPath" : userData
+
+        Task {
+            await ActionDispatcher.dispatch(actionID: actionID, filePaths: paths)
+        }
+    }
+
     // MARK: - Permissions
 
     func checkPermissions() {
