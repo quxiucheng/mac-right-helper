@@ -24,5 +24,32 @@
 	<false/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>复制路径</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>handleRightHelperService</string>
+			<key>NSPortName</key>
+			<string>mac-right-helper</string>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSTextContent</key>
+				<string>FilePath</string>
+			</dict>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSPasteboardTypeFileURL</string>
+			</array>
+			<key>NSReturnTypes</key>
+			<array/>
+			<key>NSUserData</key>
+			<string>copyPath</string>
+		</dict>
+	</array>
 </dict>
 </plist>
