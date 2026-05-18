@@ -116,7 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             "\(homeDir)/Downloads"
         ]
 
-        ipc.sendConfig(actions: actions, monitorDirs: monitorDirs)
+        ipc.writeConfig(actions: actions, monitorDirs: monitorDirs)
     }
 
     private func iconForAction(_ id: String, group: String) -> String {
