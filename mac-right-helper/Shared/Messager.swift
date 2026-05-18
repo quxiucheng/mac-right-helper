@@ -57,6 +57,9 @@ class Messager {
     }
 
     func on(name: String, handler: @escaping (MessagePayload) -> Void) {
+        if handlers[name] != nil {
+            center.removeObserver(self, name: NSNotification.Name(name), object: nil)
+        }
         center.addObserver(
             self,
             selector: #selector(received(_:)),

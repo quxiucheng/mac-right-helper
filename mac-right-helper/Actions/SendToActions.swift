@@ -48,7 +48,7 @@ struct SendAliasToDesktopAction: ActionHandler {
         let desktop = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop").path
         for path in filePaths {
             let executor = ScriptExecutor()
-            _ = try await executor.executeShell(script: "osascript -e 'tell app \"Finder\" to make alias file to POSIX file \"\(path)\" at POSIX file \"\(desktop)\"'", arguments: [])
+            _ = try await executor.executeShell(script: "osascript -e 'tell app \"Finder\" to make alias file to POSIX file \"$1\" at POSIX file \"$2\"'", arguments: [path, desktop])
         }
     }
 }

@@ -12,10 +12,10 @@ struct CutFilesAction: ActionHandler {
         let settings = ConfigManager.shared.config.settings
         if settings.cutHideFiles {
             for path in filePaths {
-                var attrs = try FileManager.default.attributesOfItem(atPath: path)
-                var perms = attrs[.posixPermissions] as? UInt16 ?? 0o644
-                perms |= 0o100000
-                attrs[.posixPermissions] = perms
+                var url = URL(fileURLWithPath: path)
+                var resourceValues = URLResourceValues()
+                resourceValues.isHidden = true
+                try url.setResourceValues(resourceValues)
             }
         }
     }

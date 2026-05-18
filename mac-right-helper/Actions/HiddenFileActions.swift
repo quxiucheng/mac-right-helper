@@ -4,9 +4,10 @@ struct HideSelectedFilesAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard !filePaths.isEmpty else { return }
         for path in filePaths {
-            var attrs = try FileManager.default.attributesOfItem(atPath: path)
-            attrs[.posixPermissions] = 0o100000 | ((attrs[.posixPermissions] as? UInt16) ?? 0o644)
-            try FileManager.default.setAttributes(attrs, ofItemAtPath: path)
+            var url = URL(fileURLWithPath: path)
+            var resourceValues = URLResourceValues()
+            resourceValues.isHidden = true
+            try url.setResourceValues(resourceValues)
         }
     }
 }
@@ -15,9 +16,10 @@ struct UnhideSelectedFilesAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard !filePaths.isEmpty else { return }
         for path in filePaths {
-            var attrs = try FileManager.default.attributesOfItem(atPath: path)
-            attrs[.posixPermissions] = 0o644
-            try FileManager.default.setAttributes(attrs, ofItemAtPath: path)
+            var url = URL(fileURLWithPath: path)
+            var resourceValues = URLResourceValues()
+            resourceValues.isHidden = false
+            try url.setResourceValues(resourceValues)
         }
     }
 }

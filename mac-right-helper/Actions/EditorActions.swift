@@ -11,7 +11,7 @@ struct OpenInEditorAction: ActionHandler {
             target = URL(fileURLWithPath: path).deletingLastPathComponent().path
         }
         let executor = ScriptExecutor()
-        _ = try await executor.executeShell(script: "open -b \"\(bundleID)\" \"\(target)\"", arguments: [])
+        _ = try await executor.executeShell(script: "open -b \"\(bundleID)\" \"$1\"", arguments: [target])
     }
 }
 
@@ -26,9 +26,9 @@ struct OpenInTerminalAction: ActionHandler {
         let executor = ScriptExecutor()
         let mode = ConfigManager.shared.config.settings.terminalOpenMode
         if mode == .newTab {
-            _ = try await executor.executeShell(script: "osascript -e 'tell app \"Terminal\" to activate' -e 'tell app \"Terminal\" to do script \"cd \\\"\(target)\\\"\"'", arguments: [])
+            _ = try await executor.executeShell(script: "osascript -e 'tell app \"Terminal\" to activate' -e 'tell app \"Terminal\" to do script \"cd \\\"$1\\\"\"'", arguments: [target])
         } else {
-            _ = try await executor.executeShell(script: "open -a Terminal \"\(target)\"", arguments: [])
+            _ = try await executor.executeShell(script: "open -a Terminal \"$1\"", arguments: [target])
         }
     }
 }
@@ -43,6 +43,7 @@ struct OpenInITerm2Action: ActionHandler {
         }
         let executor = ScriptExecutor()
         let mode = ConfigManager.shared.config.settings.terminalOpenMode
+        let scriptTarget = target.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
         if mode == .newTab {
             let script = """
             tell application "iTerm"
@@ -50,7 +51,7 @@ struct OpenInITerm2Action: ActionHandler {
                 tell current window
                     create tab with default profile
                     tell current session
-                        write text "cd \"\(target)\""
+                        write text "cd \\\"\(scriptTarget)\\\""
                     end tell
                 end tell
             end tell
@@ -62,7 +63,7 @@ struct OpenInITerm2Action: ActionHandler {
                 activate
                 create window with default profile
                 tell current session of current window
-                    write text "cd \"\(target)\""
+                    write text "cd \\\"\(scriptTarget)\\\""
                 end tell
             end tell
             """

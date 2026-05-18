@@ -450,7 +450,7 @@ class TemplateEditorSheet: NSViewController {
 
     @objc private func save() {
         let name = nameField.stringValue.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
+        guard !name.isEmpty else { NSSound.beep(); return }
         let tpl = FileTemplate(
             id: editing?.id ?? UUID().uuidString,
             name: name,
@@ -814,7 +814,7 @@ class ScriptEditorSheet: NSViewController {
     @objc private func save() {
         let id = editingScript?.id ?? UUID().uuidString
         let name = nameField.stringValue.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
+        guard !name.isEmpty else { NSSound.beep(); return }
         let type = ScriptType(rawValue: typePopup.titleOfSelectedItem ?? "shell") ?? .shell
         let source = sourceField.string
         let script = CustomScript(

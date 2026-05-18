@@ -32,7 +32,7 @@ class StatusBarController {
     }
 
     @objc private func handleClick(_ sender: NSStatusBarButton) {
-        let event = NSApp.currentEvent!
+        guard let event = NSApp.currentEvent else { return }
         if event.type == .rightMouseUp {
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 2), in: sender)
         } else {

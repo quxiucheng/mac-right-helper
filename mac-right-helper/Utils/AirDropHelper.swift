@@ -6,22 +6,13 @@ enum AirDropHelper {
         let urls = files.map { URL(fileURLWithPath: $0) }
         let picker = NSSharingServicePicker(items: urls)
 
-        if let button = NSApp.keyWindow?.contentView {
-            picker.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
-        }
-    }
-
-    static func shareViaAppleScript(files: [String]) {
-        let paths = files.map { "\"\($0)\"" }.joined(separator: ", ")
-        let script = """
-        tell application "Finder"
-            set theItems to { \(paths) }
-            activate
-        end tell
-        """
-        var errorInfo: NSDictionary?
-        if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(&errorInfo)
+        if let contentView = NSApp.keyWindow?.contentView {
+            picker.show(relativeTo: contentView.bounds, of: contentView, preferredEdge: .maxY)
+        } else if let statusItem = (NSApp.delegate as? AppDelegate)?.statusItem {
+            picker.show(relativeTo: .zero, of: statusItem.button!, preferredEdge: .maxY)
+        } else {
+            let service = NSSharingService(named: .sendViaAirDrop)
+            service?.perform(withItems: urls)
         }
     }
 }

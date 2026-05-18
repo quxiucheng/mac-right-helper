@@ -13,7 +13,11 @@ class PermissionManager {
         do {
             _ = try FileManager.default.contentsOfDirectory(atPath: testURL.path)
             return .granted
-        } catch {
+        } catch let error as NSError {
+            if error.domain == NSCocoaErrorDomain,
+               error.code == NSFileReadNoSuchFileError {
+                return .unknown
+            }
             return .denied
         }
     }

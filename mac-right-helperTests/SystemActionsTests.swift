@@ -48,6 +48,8 @@ final class SystemActionsTests: XCTestCase {
     func testCreateSymlinkSinglePath() async throws {
         let action = CreateSymlinkAction()
         try await action.handle(filePaths: [testFile])
+        let linkPath = (testDir as NSString).appendingPathComponent("link.sh")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: linkPath))
     }
 
     func testCreateSymlinkNormal() async throws {

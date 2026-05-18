@@ -5,11 +5,7 @@ class ConfigManager {
     static let configKey = "RightHelperMenuConfig"
     static let configChangedNotification = Notification.Name("RightHelperConfigChanged")
 
-    var config: AppConfig {
-        didSet {
-            NotificationCenter.default.post(name: Self.configChangedNotification, object: nil)
-        }
-    }
+    var config: AppConfig
 
     init() {
         if let data = UserDefaults.standard.data(forKey: Self.configKey),
@@ -26,6 +22,7 @@ class ConfigManager {
         if let data = try? JSONEncoder().encode(config) {
             UserDefaults.standard.set(data, forKey: Self.configKey)
         }
+        NotificationCenter.default.post(name: Self.configChangedNotification, object: nil)
     }
 
     func resetToDefaults() {

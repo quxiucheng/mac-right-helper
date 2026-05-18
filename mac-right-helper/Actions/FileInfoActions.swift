@@ -17,9 +17,6 @@ struct ShowFileInfoAction: ActionHandler {
         """
 
         await MainActor.run {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(info, forType: .string)
-
             let alert = NSAlert()
             alert.messageText = L("fileInformation")
             alert.informativeText = info

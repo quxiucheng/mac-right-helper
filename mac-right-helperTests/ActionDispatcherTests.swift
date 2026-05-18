@@ -2,6 +2,17 @@ import XCTest
 @testable import mac_right_helper
 
 final class ActionDispatcherTests: XCTestCase {
+    private let manager = ConfigManager.shared
+
+    override func setUp() {
+        super.setUp()
+        manager.resetToDefaults()
+    }
+
+    override func tearDown() {
+        manager.resetToDefaults()
+        super.tearDown()
+    }
 
     func testHandlerForBuiltInAction() {
         let handler = ActionDispatcher.handler(for: "copyPath")
@@ -15,7 +26,6 @@ final class ActionDispatcherTests: XCTestCase {
     }
 
     func testHandlerForCustomScript() {
-        let manager = ConfigManager()
         let script = CustomScript(
             id: "test-script-1",
             name: "Test Script",
@@ -31,29 +41,22 @@ final class ActionDispatcherTests: XCTestCase {
         let handler = ActionDispatcher.handler(for: "test-script-1")
         XCTAssertNotNil(handler)
         XCTAssertTrue(handler is CustomScriptHandler)
-
-        manager.resetToDefaults()
     }
 
     func testDispatchWithValidAction() async {
-        // copyPath with empty paths should not throw
         await ActionDispatcher.dispatch(actionID: "copyPath", filePaths: [])
     }
 
     func testDispatchWithInvalidAction() async {
-        // unknown action should not throw, just print and return
         await ActionDispatcher.dispatch(actionID: "invalid-action-id", filePaths: ["/tmp"])
     }
 
     func testDisabledBuiltInActionReturnsNil() {
-        let manager = ConfigManager()
         manager.config.builtinItems["copyPath"] = AppConfig.BuiltinItemConfig(enabled: false, weight: 10, group: "File")
         manager.save()
 
         let handler = ActionDispatcher.handler(for: "copyPath")
         XCTAssertNil(handler)
-
-        manager.resetToDefaults()
     }
 
     func testEnabledBuiltInActionReturnsHandler() {
@@ -74,38 +77,29 @@ final class ActionDispatcherTests: XCTestCase {
     }
 
     func testDynamicTemplateHandler() {
-        let manager = ConfigManager()
         manager.config.templates = [FileTemplate(id: "test-tpl", name: "Test", ext: "txt", content: "")]
         manager.save()
 
         let handler = ActionDispatcher.handler(for: "tpl_test-tpl")
         XCTAssertNotNil(handler)
         XCTAssertTrue(handler is NewFileWithTemplateAction)
-
-        manager.resetToDefaults()
     }
 
     func testDynamicFavoriteFolderHandler() {
-        let manager = ConfigManager()
         manager.config.favoriteFolders = [FavoriteFolder(id: "test-fav", name: "Test", path: "/tmp")]
         manager.save()
 
         let handler = ActionDispatcher.handler(for: "fav_test-fav")
         XCTAssertNotNil(handler)
         XCTAssertTrue(handler is SendToFolderAction)
-
-        manager.resetToDefaults()
     }
 
     func testDynamicFavoriteDirectoryHandler() {
-        let manager = ConfigManager()
         manager.config.favoriteDirectories = [FavoriteDirectory(id: "test-dir", name: "Test", path: "/tmp")]
         manager.save()
 
         let handler = ActionDispatcher.handler(for: "dir_test-dir")
         XCTAssertNotNil(handler)
         XCTAssertTrue(handler is OpenDirectoryAction)
-
-        manager.resetToDefaults()
     }
 }

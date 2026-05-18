@@ -5,6 +5,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var mainPanelController: MainPanelController?
     private let messager = Messager.shared
     private(set) var extensionRunning = false
+    private var heartbeatTimer: Timer?
+    var statusItem: NSStatusItem? { statusBarController?.statusItem }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if !ConfigManager.shared.config.settings.hideStatusBarIcon {
@@ -41,9 +43,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         switch payload.action {
         case "heartbeat":
             extensionRunning = true
-            // Re-sync config when extension comes online
             syncActionsToExtension()
             mainPanelController?.refreshStatus()
+            heartbeatTimer?.invalidate()
+            heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+                self?.extensionRunning = false
+                self?.mainPanelController?.refreshStatus()
+            }
 
         default:
             // Dispatch action to ActionDispatcher
@@ -185,9 +191,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func configChanged() {
         syncActionsToExtension()
-    }
-
-    @objc private func settingsChanged() {
         let shouldHide = ConfigManager.shared.config.settings.hideStatusBarIcon
         if shouldHide {
             statusBarController = nil

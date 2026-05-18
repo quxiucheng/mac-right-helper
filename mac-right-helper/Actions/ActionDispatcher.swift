@@ -138,6 +138,11 @@ struct OpenDirectoryAction: ActionHandler {
 
 private extension String {
     func expandingTilde() -> String {
-        return self.replacingOccurrences(of: "~", with: FileManager.default.homeDirectoryForCurrentUser.path)
+        if hasPrefix("~/") {
+            return FileManager.default.homeDirectoryForCurrentUser.path + String(dropFirst(1))
+        } else if self == "~" {
+            return FileManager.default.homeDirectoryForCurrentUser.path
+        }
+        return self
     }
 }

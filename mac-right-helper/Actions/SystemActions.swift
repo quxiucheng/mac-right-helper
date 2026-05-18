@@ -21,9 +21,9 @@ struct ChangePermissionsAction: ActionHandler {
 struct CreateSymlinkAction: ActionHandler {
     func handle(filePaths: [String]) async throws {
         guard filePaths.count >= 2 else { return }
-        let target = filePaths[0]
-        let link = filePaths[1]
-        try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: target)
+        let targetPath = filePaths[0]
+        let linkPath = filePaths[1]
+        try FileManager.default.createSymbolicLink(atPath: linkPath, withDestinationPath: targetPath)
     }
 }
 

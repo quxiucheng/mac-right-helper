@@ -16,7 +16,7 @@ class ScriptExecutor {
     func executeShell(script: String, arguments: [String]) async throws -> ScriptResult {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = ["-c", script] + arguments
+        process.arguments = ["-c", script, "mac-right-helper"] + arguments
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -45,7 +45,7 @@ class ScriptExecutor {
     func executePython(script: String, arguments: [String]) async throws -> ScriptResult {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-        process.arguments = ["-c", script] + arguments
+        process.arguments = ["-c", script, "mac-right-helper"] + arguments
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -72,7 +72,7 @@ class ScriptExecutor {
 
     func executeAppleScript(source: String) async throws -> ScriptResult {
         return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
+            DispatchQueue.main.async {
                 var errorInfo: NSDictionary?
                 guard let appleScript = NSAppleScript(source: source) else {
                     continuation.resume(throwing: ScriptExecutionError.invalidScriptType)

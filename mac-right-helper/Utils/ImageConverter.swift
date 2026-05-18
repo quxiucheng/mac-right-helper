@@ -98,12 +98,13 @@ enum ImageConverter {
 
 private extension NSImage {
     func resized(to newSize: NSSize) -> NSImage? {
-        let newImage = NSImage(size: newSize)
-        newImage.lockFocus()
-        self.draw(in: NSRect(origin: .zero, size: newSize),
-                  from: NSRect(origin: .zero, size: self.size),
-                  operation: .copy, fraction: 1.0)
-        newImage.unlockFocus()
-        return newImage
+        let source = self
+        return NSImage(size: newSize, flipped: false) { rect in
+            source.draw(in: rect,
+                        from: NSRect(origin: .zero, size: source.size),
+                        operation: .copy,
+                        fraction: 1.0)
+            return true
+        }
     }
 }
