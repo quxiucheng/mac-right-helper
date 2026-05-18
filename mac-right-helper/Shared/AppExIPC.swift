@@ -72,7 +72,7 @@ final class AppExIPC {
             CFNotificationCenterRemoveObserver(
                 center,
                 Unmanaged.passUnretained(self).toOpaque(),
-                CFNotificationName(rawValue: name as CFString),
+                name as CFString,
                 nil
             )
         }
@@ -170,14 +170,15 @@ final class AppExIPC {
             center,
             Unmanaged.passUnretained(self).toOpaque(),
             { _, observer, notificationName, _, _ in
-                guard let observer = observer else { return }
+                guard let observer = observer,
+                      let notificationName = notificationName else { return }
                 let ipc = Unmanaged<AppExIPC>.fromOpaque(observer).takeUnretainedValue()
                 let nameString = notificationName.rawValue as String
                 DispatchQueue.main.async {
                     ipc.handlers[nameString]?()
                 }
             },
-            CFNotificationName(rawValue: name as CFString),
+            name as CFString,
             nil,
             .deliverImmediately
         )
