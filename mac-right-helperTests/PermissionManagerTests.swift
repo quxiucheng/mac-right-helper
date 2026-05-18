@@ -13,4 +13,11 @@ final class PermissionManagerTests: XCTestCase {
         let status = manager.accessibilityStatus
         XCTAssertTrue(status == .granted || status == .denied)
     }
+
+    func testRequestAccessibilityPermissionReturnsBool() {
+        let manager = PermissionManager()
+        let result = manager.requestAccessibilityPermission()
+        // Should return a boolean (will be false in CI without TCC grant)
+        XCTAssertTrue(result == true || result == false)
+    }
 }

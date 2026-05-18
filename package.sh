@@ -81,7 +81,7 @@ echo "Building Finder Sync Extension..."
 EXT_BINARY="${EXT_BUNDLE}/Contents/MacOS/FinderSyncExt"
 TMP_DIR=$(mktemp -d)
 
-# Extension sources: extension file + shared Messager
+# Extension sources: extension file + shared IPC + shared types
 EXT_SOURCES=()
 if [ -f "${EXT_SRC_DIR}/FinderSyncExt.swift" ]; then
     EXT_SOURCES+=("${EXT_SRC_DIR}/FinderSyncExt.swift")
@@ -89,6 +89,9 @@ fi
 if [ -f "${SRC_DIR}/Shared/Messager.swift" ]; then
     EXT_SOURCES+=("${SRC_DIR}/Shared/Messager.swift")
 fi
+    if [ -f "${SRC_DIR}/Shared/AppExIPC.swift" ]; then
+        EXT_SOURCES+=("${SRC_DIR}/Shared/AppExIPC.swift")
+    fi
 
 if [ ${#EXT_SOURCES[@]} -eq 0 ]; then
     echo "Warning: No extension source files found, skipping extension build"
@@ -98,6 +101,7 @@ else
     echo "  → Building extension arm64..."
     swiftc \
         -emit-library \
+        -Xlinker -bundle \
         -O \
         -target "arm64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
@@ -110,6 +114,7 @@ else
     echo "  → Building extension x86_64..."
     swiftc \
         -emit-library \
+        -Xlinker -bundle \
         -O \
         -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
@@ -154,21 +159,20 @@ fi
 # 6. Code sign (extension first, then main app)
 echo "Code signing with identity: '${CODE_SIGN_IDENTITY}'"
 
+# Build signing args — hardened runtime only for developer-signed builds
+SIGN_ARGS="--force"
+if [ "${CODE_SIGN_IDENTITY}" != "-" ]; then
+    SIGN_ARGS="${SIGN_ARGS} --options runtime"
+fi
+
 # Sign extension first
 if [ -d "${EXT_BUNDLE}" ]; then
-    codesign --force --deep --sign "${CODE_SIGN_IDENTITY}" \
-        "${EXT_BUNDLE}" 2>/dev/null || \
-    codesign --force --deep --sign "${CODE_SIGN_IDENTITY}" \
-        "${EXT_BUNDLE}"
+    codesign --force --sign "${CODE_SIGN_IDENTITY}" "${EXT_BUNDLE}"
     echo "  → Extension signed"
 fi
 
-# Sign main app (--deep will also sign embedded extensions)
-codesign --force --deep --sign "${CODE_SIGN_IDENTITY}" \
-    --options runtime \
-    "${APP_BUNDLE}" 2>/dev/null || \
-codesign --force --deep --sign "${CODE_SIGN_IDENTITY}" \
-    "${APP_BUNDLE}"
+# Sign main app
+codesign ${SIGN_ARGS} --sign "${CODE_SIGN_IDENTITY}" "${APP_BUNDLE}"
 
 # 7. Validate
 echo "Validating bundle..."

@@ -86,8 +86,9 @@ class MainPanelViewController: NSViewController {
         actionCount.font = NSFont.boldSystemFont(ofSize: 13)
 
         let reloadBtn = NSButton(title: L("reloadServices"), target: self, action: #selector(reloadServices))
+        let axBtn = NSButton(title: L("requestAccessibility"), target: self, action: #selector(requestAccessibility))
         let prefsBtn = NSButton(title: L("preferences"), target: self, action: #selector(openPreferences))
-        let buttonRow = NSStackView(views: [reloadBtn, prefsBtn])
+        let buttonRow = NSStackView(views: [reloadBtn, axBtn, prefsBtn])
         buttonRow.orientation = .horizontal
         buttonRow.spacing = 12
         buttonRow.alignment = .centerY
@@ -137,6 +138,10 @@ class MainPanelViewController: NSViewController {
     @objc private func reloadServices() {
         (NSApp.delegate as? AppDelegate)?.syncActionsToExtension()
         refresh()
+    }
+
+    @objc private func requestAccessibility() {
+        (NSApp.delegate as? AppDelegate)?.requestAccessibilityPermission()
     }
 
     @objc private func openPreferences() {

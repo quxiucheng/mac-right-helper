@@ -1,7 +1,6 @@
 import Cocoa
 import FinderSync
 
-/// DispatchQueue label for serializing tag access
 private let tagQueue = DispatchQueue(label: "com.example.finder-sync-ext.tags")
 
 class FinderSyncExt: FIFinderSync {
@@ -9,7 +8,7 @@ class FinderSyncExt: FIFinderSync {
     private var tagRidMap: [Int: String] = [:]
     private var menuActions: [ActionItem] = []
     private var isHostRunning = false
-    private let messager = Messager.shared
+    private let ipc = AppExIPC.shared
     private var currentMenuKind: FIMenuKind = .contextualMenuForContainer
 
     // MARK: - Init
@@ -17,36 +16,27 @@ class FinderSyncExt: FIFinderSync {
     override init() {
         super.init()
 
-        // Monitor the entire filesystem so right-click works everywhere
         FIFinderSyncController.default().directoryURLs = [URL(fileURLWithPath: "/")]
 
-        // Listen for status updates from main app
-        messager.on(name: MsgKey.running) { [weak self] payload in
+        // Listen for config updates from main app
+        ipc.onConfig { [weak self] actions, dirs in
             self?.isHostRunning = true
-            if !payload.target.isEmpty {
-                let urls = Set(payload.target.map { URL(fileURLWithPath: $0) })
+            if !dirs.isEmpty {
+                let urls = Set(dirs.map { URL(fileURLWithPath: $0) })
                 FIFinderSyncController.default().directoryURLs = urls
             }
-            // Parse action list sent from main app
-            let actions = payload.parseActions()
             if !actions.isEmpty {
                 self?.menuActions = actions
             }
-            self?.heartbeat()
         }
 
-        messager.on(name: MsgKey.quit) { [weak self] _ in
+        // Listen for quit signal from main app
+        ipc.onQuit { [weak self] in
             self?.isHostRunning = false
         }
 
-        heartbeat()
-    }
-
-    private func heartbeat() {
-        messager.sendMessage(
-            name: MsgKey.fromFinder,
-            data: MessagePayload(action: "heartbeat", target: [], rid: "")
-        )
+        // Send initial heartbeat
+        ipc.sendHeartbeat()
     }
 
     // MARK: - FIFinderSync
@@ -89,10 +79,7 @@ class FinderSyncExt: FIFinderSync {
     }
 
     private func buildMenu(_ menu: NSMenu) {
-        // Group actions by category
         let groups = Dictionary(grouping: menuActions.filter(\.enabled)) { $0.group }
-
-        // Order: File -> Dev -> System -> Image -> Service -> iShot
         let orderedGroups = ["File", "Dev", "System", "Image", "Service", "iShot"]
 
         for group in orderedGroups {
@@ -100,7 +87,6 @@ class FinderSyncExt: FIFinderSync {
             addSubmenu(menu, title: groupName(group), icon: groupIcon(group), items: items)
         }
 
-        // Ungrouped items
         if let ungrouped = groups[""], !ungrouped.isEmpty {
             for item in ungrouped {
                 menu.addItem(makeMenuItem(for: item))
@@ -163,10 +149,7 @@ class FinderSyncExt: FIFinderSync {
         if currentMenuKind == .contextualMenuForContainer { trigger = "ctx-container" }
         else if currentMenuKind == .toolbarItemMenu { trigger = "toolbar" }
 
-        messager.sendMessage(
-            name: MsgKey.fromFinder,
-            data: MessagePayload(action: rid, target: targets, rid: rid, trigger: trigger)
-        )
+        ipc.sendAction(actionID: rid, filePaths: targets, trigger: trigger)
     }
 
     private func getSelectedPaths() -> [String] {

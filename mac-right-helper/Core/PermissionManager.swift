@@ -9,9 +9,6 @@ enum PermissionStatus {
 class PermissionManager {
     var fullDiskAccessStatus: PermissionStatus {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        // Multiple protected paths — if any returns permission error, FDA is denied.
-        // TCC may hide denial as "file not found", so we probe several paths to
-        // reduce the chance of false .unknown.
         let checkPaths = [
             "Library/Safari",
             "Library/Mail",
@@ -35,7 +32,16 @@ class PermissionManager {
     }
 
     var accessibilityStatus: PermissionStatus {
-        return AXIsProcessTrustedWithOptions(nil) ? .granted : .denied
+        let opts = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: false] as CFDictionary
+        return AXIsProcessTrustedWithOptions(opts) ? .granted : .denied
+    }
+
+    /// Actively prompt the user to grant accessibility permission via the system dialog.
+    /// Returns true if permission was already granted or the user granted it in response to the prompt.
+    @discardableResult
+    func requestAccessibilityPermission() -> Bool {
+        let opts = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
+        return AXIsProcessTrustedWithOptions(opts)
     }
 
     func openSystemPreferencesPrivacy() {

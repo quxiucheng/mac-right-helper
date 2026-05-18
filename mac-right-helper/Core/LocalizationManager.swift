@@ -69,6 +69,9 @@ class LocalizationManager {
         // Permission
         "fullDiskAccessRequired": [.chinese: "需要完全磁盘访问权限", .english: "Full Disk Access Required"],
         "fullDiskAccessInfo": [.chinese: "右键助手需要完全磁盘访问权限才能操作受保护位置的文件。请在系统设置中开启。", .english: "mac-right-helper needs Full Disk Access to operate on files in protected locations. Please enable it in System Settings."],
+        "accessibilityPermissionRequired": [.chinese: "需要辅助功能权限", .english: "Accessibility Permission Required"],
+        "accessibilityPermissionInfo": [.chinese: "右键助手需要辅助功能权限以监控系统事件。由于应用使用 ad-hoc 签名，每次更新后可能需要重新授权。请在系统设置中重新开启。", .english: "mac-right-helper needs Accessibility permission to monitor system events. Since the app is ad-hoc signed, you may need to re-grant it after each update. Please toggle it OFF and ON in System Settings, then re-launch the app."],
+        "requestAccessibility": [.chinese: "请求辅助功能权限", .english: "Request Accessibility"],
         "openSettings": [.chinese: "打开设置", .english: "Open Settings"],
         "later": [.chinese: "稍后", .english: "Later"],
 

@@ -3,7 +3,7 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
     private(set) var mainPanelController: MainPanelController?
-    private let messager = Messager.shared
+    private let ipc = AppExIPC.shared
     private(set) var extensionRunning = false
     private var heartbeatTimer: Timer?
     var statusItem: NSStatusItem? { statusBarController?.statusItem }
@@ -15,7 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         checkPermissions()
 
         // Setup IPC with Finder Sync Extension
-        setupMessager()
+        setupIPC()
         syncActionsToExtension()
 
         NotificationCenter.default.addObserver(
@@ -33,28 +33,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Finder Sync IPC
 
-    private func setupMessager() {
-        messager.on(name: MsgKey.fromFinder) { [weak self] payload in
-            self?.handleFinderMessage(payload)
-        }
-    }
-
-    private func handleFinderMessage(_ payload: MessagePayload) {
-        switch payload.action {
-        case "heartbeat":
-            extensionRunning = true
-            syncActionsToExtension()
-            mainPanelController?.refreshStatus()
-            heartbeatTimer?.invalidate()
-            heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+    private func setupIPC() {
+        // Extension heartbeat — confirms it is alive
+        ipc.onHeartbeat { [weak self] in
+            self?.extensionRunning = true
+            self?.syncActionsToExtension()
+            self?.mainPanelController?.refreshStatus()
+            self?.heartbeatTimer?.invalidate()
+            self?.heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
                 self?.extensionRunning = false
                 self?.mainPanelController?.refreshStatus()
             }
+        }
 
-        default:
-            // Dispatch action to ActionDispatcher
+        // Extension triggers an action on selected files
+        ipc.onAction { [weak self] actionID, filePaths, _ in
             Task {
-                await ActionDispatcher.dispatch(actionID: payload.action, filePaths: payload.target)
+                await ActionDispatcher.dispatch(actionID: actionID, filePaths: filePaths)
             }
         }
     }
@@ -116,10 +111,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             ))
         }
 
-        // Encode actions as JSON and send
-        let jsonData = try? JSONEncoder().encode(actions)
-        let jsonStr = jsonData.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
         let monitorDirs = [
             "/",
@@ -129,15 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             "\(homeDir)/Downloads"
         ]
 
-        messager.sendMessage(
-            name: MsgKey.running,
-            data: MessagePayload(
-                action: "running",
-                target: monitorDirs,
-                rid: "",
-                configJSON: jsonStr
-            )
-        )
+        ipc.sendConfig(actions: actions, monitorDirs: monitorDirs)
     }
 
     private func iconForAction(_ id: String, group: String) -> String {
@@ -216,26 +199,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        messager.sendMessage(
-            name: MsgKey.quit,
-            data: MessagePayload(action: "quit", target: [], rid: "")
-        )
+        ipc.sendQuit()
     }
 
     // MARK: - Permissions
 
-    private func checkPermissions() {
+    func checkPermissions() {
         let manager = PermissionManager()
-        if manager.fullDiskAccessStatus != .granted {
+        let fda = manager.fullDiskAccessStatus
+        let ax = manager.accessibilityStatus
+
+        if fda != .granted {
             showPermissionAlert(
                 title: L("fullDiskAccessRequired"),
                 info: L("fullDiskAccessInfo"),
                 url: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
             )
         }
+
+        if ax != .granted {
+            showPermissionAlert(
+                title: L("accessibilityPermissionRequired"),
+                info: L("accessibilityPermissionInfo"),
+                url: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+            )
+        }
     }
 
-    private func showPermissionAlert(title: String, info: String, url: String) {
+    func requestAccessibilityPermission() {
+        let manager = PermissionManager()
+        manager.requestAccessibilityPermission()
+        mainPanelController?.refreshStatus()
+    }
+
+    func showPermissionAlert(title: String, info: String, url: String) {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = info
