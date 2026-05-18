@@ -109,8 +109,6 @@ else
 
     echo "  → Building extension arm64..."
     swiftc \
-        -emit-library \
-        -Xlinker -bundle \
         -O \
         -target "arm64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
@@ -122,8 +120,6 @@ else
 
     echo "  → Building extension x86_64..."
     swiftc \
-        -emit-library \
-        -Xlinker -bundle \
         -O \
         -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
@@ -176,18 +172,24 @@ fi
 
 # Sign extension first
 if [ -d "${EXT_BUNDLE}" ]; then
-    codesign --force --sign "${CODE_SIGN_IDENTITY}" "${EXT_BUNDLE}"
+    codesign ${SIGN_ARGS} --sign "${CODE_SIGN_IDENTITY}" "${EXT_BUNDLE}"
     echo "  → Extension signed"
 fi
 
 # Sign main app
 codesign ${SIGN_ARGS} --sign "${CODE_SIGN_IDENTITY}" "${APP_BUNDLE}"
 
-# 7. Validate
+# 7. Register extension with system
+echo "Registering extension with system..."
+if [ -d "${EXT_BUNDLE}" ]; then
+    pluginkit -a "${EXT_BUNDLE}" 2>/dev/null || true
+fi
+
+# 8. Validate
 echo "Validating bundle..."
 codesign -vv --deep "${APP_BUNDLE}" 2>&1 || echo "  (validation warnings may be normal for ad-hoc signing)"
 
-# 8. Print summary
+# 9. Print summary
 BINARY_SIZE=$(du -sh "${BINARY_PATH}" | cut -f1)
 BUNDLE_SIZE=$(du -sh "${APP_BUNDLE}" | cut -f1)
 

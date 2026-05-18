@@ -145,7 +145,7 @@ class MainPanelViewController: NSViewController {
         axStatus.textColor = axGranted ? .systemGreen : .systemRed
 
         let extRunning = (NSApp.delegate as? AppDelegate)?.extensionRunning ?? false
-        let extEnabled = Self.isFinderExtensionEnabled()
+        let extEnabled = ExtensionManager.isExtensionEnabled()
         if extEnabled {
             extStatus.stringValue = extRunning ? L("connected") : L("disconnected")
             extStatus.textColor = extRunning ? .systemGreen : .secondaryLabelColor
@@ -160,25 +160,6 @@ class MainPanelViewController: NSViewController {
 
         let count = ConfigManager.shared.config.builtinItems.filter { $0.value.enabled }.count
         actionCount.stringValue = String(count)
-    }
-
-    /// Check whether the Finder Sync Extension is registered and enabled via pluginkit.
-    private static func isFinderExtensionEnabled() -> Bool {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/pluginkit")
-        task.arguments = ["-m", "-i", "com.example.mac-right-helper.FinderSyncExt"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        do {
-            try task.run()
-            task.waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            guard let output = String(data: data, encoding: .utf8) else { return false }
-            // pluginkit output contains a '+' prefix when the extension is enabled
-            return output.contains("+")
-        } catch {
-            return false
-        }
     }
 
     override func viewWillAppear() {

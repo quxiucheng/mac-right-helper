@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !ConfigManager.shared.config.settings.hideStatusBarIcon {
             statusBarController = StatusBarController()
         }
+        ExtensionManager.registerExtension()
         checkPermissions()
 
         syncActionsToExtension()
