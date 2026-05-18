@@ -1,5 +1,24 @@
 import Foundation
 
+// MARK: - Darwin notify(3) C API bindings
+// These C functions are not automatically imported into Swift.
+
+@_silgen_name("notify_post")
+private func notify_post(_ name: UnsafePointer<CChar>) -> Int32
+
+@_silgen_name("notify_register_dispatch")
+private func notify_register_dispatch(
+    _ name: UnsafePointer<CChar>,
+    _ out_token: UnsafeMutablePointer<Int32>,
+    _ queue: DispatchQueue,
+    _ handler: @convention(block) (Int32) -> Void
+) -> Int32
+
+@_silgen_name("notify_cancel")
+private func notify_cancel(_ token: Int32) -> Int32
+
+private let NOTIFY_STATUS_OK: Int32 = 0
+
 /// Reliable IPC between main app and Finder Sync Extension.
 /// Uses Darwin notifications (notify_post / notify_register_dispatch) for
 /// lightweight signaling and a shared JSON file for config data.
@@ -66,11 +85,8 @@ final class AppExIPC {
     }
 
     deinit {
-        for (name, token) in tokens {
-            var t = token
-            notify_cancel(t)
-            // Remove this notification registration
-            notify_suspend(t)
+        for (_, token) in tokens {
+            notify_cancel(token)
         }
     }
 

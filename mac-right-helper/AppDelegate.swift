@@ -47,7 +47,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Extension triggers an action on selected files
-        ipc.onAction { [weak self] actionID, filePaths, _ in
+        ipc.onAction { actionID, filePaths, _ in
             Task {
                 await ActionDispatcher.dispatch(actionID: actionID, filePaths: filePaths)
             }

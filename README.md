@@ -146,32 +146,19 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 `build.sh` 是推荐的一键构建入口。它会自动检测环境：
 
 - 如果检测到完整 Xcode，使用 `xcodebuild` 编译
-- 如果只有 Command Line Tools，自动回退到 `package.sh` 的独立打包方式
+- 如果只有 Command Line Tools，自动回退到独立打包方式（通过 `swiftc` 直接编译）
 
 ```bash
+# 直接运行
 ./build.sh
+
+# 使用 Developer ID 签名（用于对外分发）
+CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./build.sh
 ```
 
 构建产物位于 `build/Release/mac-right-helper.app`（Xcode）或 `build/mac-right-helper.app`（独立打包）。
 
-### 方式三：独立打包（无需 Xcode 项目）
-
-> 仅需 Swift 工具链（Command Line Tools 或 Xcode 均可）。
-
-仓库内置 `package.sh`，可直接调用 `swiftc` 编译源码并生成完整的 `.app` Bundle。适用于没有完整 Xcode 或 CI 环境。
-
-```bash
-# 直接运行（脚本本身兼容 POSIX sh）
-./package.sh
-
-# 或使用 bash 显式执行
-bash package.sh
-
-# 使用 Developer ID 签名（用于对外分发）
-CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./package.sh
-```
-
-`package.sh` 内部逻辑如下：
+**独立打包模式内部逻辑：**
 
 1. **收集源文件**：递归扫描 `mac-right-helper/` 目录下所有 `.swift` 文件
 2. **准备 Bundle 目录**：创建 `build/mac-right-helper.app/Contents/MacOS` 和 `Resources`
@@ -191,8 +178,6 @@ CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./package.sh
 | `BUILD_NUMBER` | `1` | 构建号 |
 | `MIN_MACOS_VERSION` | `12.0` | 最低支持 macOS 版本 |
 | `CODE_SIGN_IDENTITY` | `-`（ad-hoc） | 代码签名证书，可通过环境变量覆盖 |
-
-构建产物位于 `build/mac-right-helper.app`。
 
 ---
 
@@ -225,7 +210,7 @@ sudo cp -R build/mac-right-helper.app /Applications/
 
 ### 打包分发
 
-若需将应用打包为 ZIP 或 DMG 进行分发，可在执行 `package.sh` 后使用以下命令：
+若需将应用打包为 ZIP 或 DMG 进行分发，可在执行 `build.sh` 后使用以下命令：
 
 ```bash
 # 生成 ZIP
@@ -429,14 +414,11 @@ xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
 ### 构建
 
 ```bash
-# Release 构建（通过构建脚本）
+# Release 构建（自动检测 Xcode 或回退到独立打包）
 ./build.sh
 
 # Release 构建（通过 xcodebuild）
 xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration Release build
-
-# 独立打包（无需 Xcode 项目）
-./package.sh
 ```
 
 **注意：** `.xcodeproj` 不在本仓库中跟踪。构建脚本假设本地 Xcode 项目中存在一个名为 `mac-right-helper` 的 scheme。
@@ -452,7 +434,7 @@ xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration
 - `ActionHandler` 全部采用无状态的 `struct` 实现，避免共享可变状态
 - `Core/` 模块不依赖 `Actions/` 或 `UI/`，保持底层能力的独立性
 - 编辑器支持通过 `open -b <bundleID>` 通用启动，可扩展
-- `package.sh` 生成的二进制为 Universal Binary（`arm64` + `x86_64`），同时支持 Apple Silicon 和 Intel Mac
+- `build.sh` 在无 Xcode 环境下生成的二进制为 Universal Binary（`arm64` + `x86_64`），同时支持 Apple Silicon 和 Intel Mac
 - 配置模型使用 `Codable`，序列化到 `UserDefaults`，支持版本迁移
 
 ---

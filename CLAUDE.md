@@ -202,14 +202,11 @@ xcodebuild test -scheme mac-right-helper -destination 'platform=macOS' \
 ## 构建
 
 ```bash
-# Release 构建（通过构建脚本）
+# Release 构建（自动检测 Xcode 或回退到独立打包）
 ./build.sh
 
 # Release 构建（通过 xcodebuild）
 xcodebuild -scheme mac-right-helper -destination 'platform=macOS' -configuration Release build
-
-# 独立打包（无需 Xcode 项目）
-./package.sh
 ```
 
 **注意：** `.xcodeproj` 不在本仓库中跟踪。构建脚本假设本地 Xcode 项目中存在一个名为 `mac-right-helper` 的 scheme。
