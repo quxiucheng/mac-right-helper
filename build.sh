@@ -90,11 +90,8 @@ echo "Building Finder Sync Extension..."
 EXT_BINARY="${EXT_BUNDLE}/Contents/MacOS/FinderSyncExt"
 TMP_DIR=$(mktemp -d)
 
-# Extension sources: main stub + extension entry + shared IPC + shared types
+# Extension sources: extension entry + shared IPC + shared types
 EXT_SOURCES=()
-if [ -f "${EXT_SRC_DIR}/main.swift" ]; then
-    EXT_SOURCES+=("${EXT_SRC_DIR}/main.swift")
-fi
 if [ -f "${EXT_SRC_DIR}/FinderSyncExt.swift" ]; then
     EXT_SOURCES+=("${EXT_SRC_DIR}/FinderSyncExt.swift")
 fi
@@ -112,6 +109,8 @@ else
 
     echo "  → Building extension arm64..."
     swiftc \
+        -emit-library \
+        -Xlinker -bundle \
         -O \
         -target "arm64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
@@ -123,6 +122,8 @@ else
 
     echo "  → Building extension x86_64..."
     swiftc \
+        -emit-library \
+        -Xlinker -bundle \
         -O \
         -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
