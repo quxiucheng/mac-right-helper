@@ -72,7 +72,7 @@ final class AppExIPC {
             CFNotificationCenterRemoveObserver(
                 center,
                 Unmanaged.passUnretained(self).toOpaque(),
-                name as CFString,
+                CFNotificationName(rawValue: name as CFString),
                 nil
             )
         }
