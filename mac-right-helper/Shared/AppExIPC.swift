@@ -1,38 +1,19 @@
 import Foundation
 
-// MARK: - Darwin notify(3) C API bindings
-// These C functions are not automatically imported into Swift.
-
-@_silgen_name("notify_post")
-private func notify_post(_ name: UnsafePointer<CChar>) -> Int32
-
-@_silgen_name("notify_register_dispatch")
-private func notify_register_dispatch(
-    _ name: UnsafePointer<CChar>,
-    _ out_token: UnsafeMutablePointer<Int32>,
-    _ queue: DispatchQueue,
-    _ handler: @convention(block) (Int32) -> Void
-) -> Int32
-
-@_silgen_name("notify_cancel")
-private func notify_cancel(_ token: Int32) -> Int32
-
-private let NOTIFY_STATUS_OK: Int32 = 0
-
 /// Reliable IPC between main app and Finder Sync Extension.
-/// Uses Darwin notifications (notify_post / notify_register_dispatch) for
-/// lightweight signaling and a shared JSON file for config data.
+/// Uses CFNotificationCenterGetDarwinNotifyCenter() for lightweight signaling
+/// and a shared JSON file for config data.
 ///
-/// Darwin notifications work at the kernel level via notify(3) and do not
-/// depend on Mach messaging, making them reliable across process boundaries
-/// even when DistributedNotificationCenter is blocked or unreliable.
+/// Darwin notifications work at the kernel level and do not depend on Mach
+/// messaging, making them reliable across process boundaries even when
+/// DistributedNotificationCenter is blocked or unreliable.
 final class AppExIPC {
 
     // MARK: - Singleton
 
     static let shared = AppExIPC()
 
-    // MARK: - Darwin notification names
+    // MARK: - Notification names
 
     private enum Note {
         static let extHeartbeat = "com.example.mac-right-helper.ext.heartbeat"
@@ -72,8 +53,10 @@ final class AppExIPC {
     private var quitHandler: (() -> Void)?
     private var actionHandler: ((String, [String], String) -> Void)?
 
-    private var tokens: [String: Int32] = [:]
+    private var handlers: [String: () -> Void] = [:]
+    private var observedNames: [String] = []
 
+    private let center = CFNotificationCenterGetDarwinNotifyCenter()
     private let queue = DispatchQueue(label: "com.example.mac-right-helper.ipc")
 
     // MARK: - Init
@@ -85,8 +68,13 @@ final class AppExIPC {
     }
 
     deinit {
-        for (_, token) in tokens {
-            notify_cancel(token)
+        for name in observedNames {
+            CFNotificationCenterRemoveObserver(
+                center,
+                Unmanaged.passUnretained(self).toOpaque(),
+                CFNotificationName(rawValue: name as CFString),
+                nil
+            )
         }
     }
 
@@ -163,22 +151,36 @@ final class AppExIPC {
         }
     }
 
-    // MARK: - Darwin notification primitives
+    // MARK: - CFNotificationCenter primitives
 
     private func post(_ name: String) {
-        notify_post(name)
+        CFNotificationCenterPostNotification(
+            center,
+            CFNotificationName(rawValue: name as CFString),
+            nil,
+            nil,
+            true
+        )
     }
 
     private func observe(_ name: String, handler: @escaping () -> Void) {
-        var token: Int32 = 0
-        let status = notify_register_dispatch(
-            name, &token, DispatchQueue.main
-        ) { _ in
-            handler()
-        }
-        if status == NOTIFY_STATUS_OK {
-            tokens[name] = token
-        }
+        handlers[name] = handler
+        observedNames.append(name)
+        CFNotificationCenterAddObserver(
+            center,
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, notificationName, _, _ in
+                guard let observer = observer else { return }
+                let ipc = Unmanaged<AppExIPC>.fromOpaque(observer).takeUnretainedValue()
+                let nameString = notificationName.rawValue as String
+                DispatchQueue.main.async {
+                    ipc.handlers[nameString]?()
+                }
+            },
+            CFNotificationName(rawValue: name as CFString),
+            nil,
+            .deliverImmediately
+        )
     }
 
     // MARK: - File-based payload
