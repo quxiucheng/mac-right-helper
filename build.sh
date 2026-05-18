@@ -174,9 +174,13 @@ if [ "${CODE_SIGN_IDENTITY}" != "-" ]; then
     SIGN_ARGS="${SIGN_ARGS} --options runtime"
 fi
 
-# Sign extension first
+# Sign extension first (with entitlements if available)
 if [ -d "${EXT_BUNDLE}" ]; then
-    codesign ${SIGN_ARGS} --sign "${CODE_SIGN_IDENTITY}" "${EXT_BUNDLE}"
+    EXT_SIGN_ARGS="${SIGN_ARGS}"
+    if [ -f "${EXT_SRC_DIR}/FinderSyncExt.entitlements" ]; then
+        EXT_SIGN_ARGS="${EXT_SIGN_ARGS} --entitlements ${EXT_SRC_DIR}/FinderSyncExt.entitlements"
+    fi
+    codesign ${EXT_SIGN_ARGS} --sign "${CODE_SIGN_IDENTITY}" "${EXT_BUNDLE}"
     echo "  → Extension signed"
 fi
 
