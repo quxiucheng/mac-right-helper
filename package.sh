@@ -97,6 +97,7 @@ else
 
     echo "  → Building extension arm64..."
     swiftc \
+        -emit-library \
         -O \
         -target "arm64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
@@ -108,6 +109,7 @@ else
 
     echo "  → Building extension x86_64..."
     swiftc \
+        -emit-library \
         -O \
         -target "x86_64-apple-macosx${MIN_MACOS_VERSION}" \
         -module-name "FinderSyncExt" \
