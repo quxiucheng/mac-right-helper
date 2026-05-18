@@ -37,11 +37,18 @@
 			<key>NSPortName</key>
 			<string>mac-right-helper</string>
 			<key>NSRequiredContext</key>
-			<dict/>
+			<dict>
+				<key>NSTextContent</key>
+				<string>FilePath</string>
+			</dict>
 			<key>NSSendTypes</key>
 			<array>
-				<string>public.file-url</string>
+				<string>NSPasteboardTypeFileURL</string>
 			</array>
+			<key>NSReturnTypes</key>
+			<array/>
+			<key>NSUserData</key>
+			<string>copyPath</string>
 		</dict>
 	</array>
 </dict>
