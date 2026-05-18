@@ -9,17 +9,29 @@ enum PermissionStatus {
 class PermissionManager {
     var fullDiskAccessStatus: PermissionStatus {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let testURL = home.appendingPathComponent("Library/Safari")
-        do {
-            _ = try FileManager.default.contentsOfDirectory(atPath: testURL.path)
-            return .granted
-        } catch let error as NSError {
-            if error.domain == NSCocoaErrorDomain,
-               error.code == NSFileReadNoSuchFileError {
-                return .unknown
+        // Multiple protected paths — if any returns permission error, FDA is denied.
+        // TCC may hide denial as "file not found", so we probe several paths to
+        // reduce the chance of false .unknown.
+        let checkPaths = [
+            "Library/Safari",
+            "Library/Mail",
+            "Library/Messages",
+            "Library/Application Scripts",
+        ]
+        for path in checkPaths {
+            let testURL = home.appendingPathComponent(path)
+            do {
+                _ = try FileManager.default.contentsOfDirectory(atPath: testURL.path)
+                return .granted
+            } catch let error as NSError {
+                if error.domain == NSCocoaErrorDomain,
+                   error.code == NSFileReadNoSuchFileError {
+                    continue
+                }
+                return .denied
             }
-            return .denied
         }
+        return .unknown
     }
 
     var accessibilityStatus: PermissionStatus {
