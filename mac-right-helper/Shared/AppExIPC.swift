@@ -1,26 +1,12 @@
 import Foundation
 
-/// Reliable IPC between main app and Finder Sync Extension.
-/// Uses CFNotificationCenterGetDarwinNotifyCenter() for lightweight signaling
-/// and a shared JSON file for config data.
-///
-/// Darwin notifications work at the kernel level and do not depend on Mach
-/// messaging, making them reliable across process boundaries even when
-/// DistributedNotificationCenter is blocked or unreliable.
+/// Reliable IPC between main app and Finder Sync Extension using file-based polling.
+/// All cross-process communication is done through shared JSON files in
+/// ~/Library/Application Support/mac-right-helper/, eliminating the need for
+/// Darwin notifications or Mach messaging which are fragile in ad-hoc signed apps.
 final class AppExIPC {
 
-    // MARK: - Singleton
-
     static let shared = AppExIPC()
-
-    // MARK: - Notification names
-
-    private enum Note {
-        static let extHeartbeat = "com.example.mac-right-helper.ext.heartbeat"
-        static let appConfig    = "com.example.mac-right-helper.app.config"
-        static let appQuit      = "com.example.mac-right-helper.app.quit"
-        static let extAction    = "com.example.mac-right-helper.ext.action"
-    }
 
     // MARK: - File paths
 
@@ -31,32 +17,27 @@ final class AppExIPC {
         return appSupport.appendingPathComponent("mac-right-helper")
     }()
 
-    private var syncFile: URL {
-        syncDir.appendingPathComponent("ipc-sync.json")
-    }
+    var configFile: URL { syncDir.appendingPathComponent("ext-config.json") }
+    var actionFile: URL { syncDir.appendingPathComponent("ext-action.json") }
+
+    /// Config becomes stale after this interval if main app stops updating it.
+    private let configStaleInterval: TimeInterval = 15
 
     // MARK: - Types
 
-    struct IPCMessage: Codable {
-        var type: String = ""        // "heartbeat", "config", "action", "quit"
-        var actions: [ActionItem]?   // config sync payload
-        var monitorDirs: [String]?   // config sync payload
-        var actionID: String?        // action dispatch payload
-        var filePaths: [String]?     // action dispatch payload
-        var trigger: String?         // action dispatch payload
+    struct ExtConfig: Codable {
+        var actions: [ActionItem]
+        var monitorDirs: [String]
+        var updatedAt: Date
     }
 
-    // MARK: - Handler registration
+    struct ActionPayload: Codable {
+        var actionID: String
+        var filePaths: [String]
+        var trigger: String
+        var timestamp: Date
+    }
 
-    private var heartbeatHandler: (() -> Void)?
-    private var configHandler: (([ActionItem], [String]) -> Void)?
-    private var quitHandler: (() -> Void)?
-    private var actionHandler: ((String, [String], String) -> Void)?
-
-    private var handlers: [String: () -> Void] = [:]
-    private var observedNames: [String] = []
-
-    private let center = CFNotificationCenterGetDarwinNotifyCenter()
     private let queue = DispatchQueue(label: "com.example.mac-right-helper.ipc")
 
     // MARK: - Init
@@ -67,138 +48,64 @@ final class AppExIPC {
         )
     }
 
-    deinit {
-        for name in observedNames {
-            CFNotificationCenterRemoveObserver(
-                center,
-                Unmanaged.passUnretained(self).toOpaque(),
-                CFNotificationName(rawValue: name as CFString),
-                nil
-            )
+    // MARK: - Config (main app writes, extension reads)
+
+    /// Write current action list and monitor directories for the extension.
+    func writeConfig(actions: [ActionItem], monitorDirs: [String]) {
+        let config = ExtConfig(actions: actions, monitorDirs: monitorDirs, updatedAt: Date())
+        queue.sync {
+            guard let data = try? JSONEncoder().encode(config) else { return }
+            try? data.write(to: configFile, options: .atomic)
         }
     }
 
-    // MARK: - Send
+    /// Read the latest config. Returns nil if the file is missing or too stale.
+    func readConfig() -> ExtConfig? {
+        queue.sync {
+            guard let data = try? Data(contentsOf: configFile),
+                  let config = try? JSONDecoder().decode(ExtConfig.self, from: data)
+            else { return nil }
 
-    /// Extension sends a heartbeat to the main app.
-    func sendHeartbeat() {
-        writeMessage(IPCMessage(type: "heartbeat"))
-        post(Note.extHeartbeat)
+            let age = Date().timeIntervalSince(config.updatedAt)
+            guard age < configStaleInterval else { return nil }
+            return config
+        }
     }
 
-    /// Main app sends config and monitor directories to the extension.
-    func sendConfig(actions: [ActionItem], monitorDirs: [String]) {
-        writeMessage(IPCMessage(
-            type: "config",
-            actions: actions,
-            monitorDirs: monitorDirs
-        ))
-        post(Note.appConfig)
-    }
+    // MARK: - Action (extension writes, main app polls)
 
-    /// Main app notifies the extension that it is quitting.
-    func sendQuit() {
-        writeMessage(IPCMessage(type: "quit"))
-        post(Note.appQuit)
-    }
-
-    /// Extension asks the main app to execute an action on selected files.
-    func sendAction(actionID: String, filePaths: [String], trigger: String) {
-        writeMessage(IPCMessage(
-            type: "action",
+    /// Extension writes an action request to be picked up by the main app.
+    func writeAction(actionID: String, filePaths: [String], trigger: String) {
+        let payload = ActionPayload(
             actionID: actionID,
             filePaths: filePaths,
-            trigger: trigger
-        ))
-        post(Note.extAction)
-    }
-
-    // MARK: - Receive (register handlers)
-
-    func onHeartbeat(_ handler: @escaping () -> Void) {
-        heartbeatHandler = handler
-        observe(Note.extHeartbeat) { [weak self] in
-            self?.heartbeatHandler?()
-        }
-    }
-
-    func onConfig(_ handler: @escaping ([ActionItem], [String]) -> Void) {
-        configHandler = handler
-        observe(Note.appConfig) { [weak self] in
-            guard let self, let msg = self.readMessage() else { return }
-            let actions = msg.actions ?? []
-            let dirs = msg.monitorDirs ?? []
-            self.configHandler?(actions, dirs)
-        }
-    }
-
-    func onQuit(_ handler: @escaping () -> Void) {
-        quitHandler = handler
-        observe(Note.appQuit) { [weak self] in
-            self?.quitHandler?()
-        }
-    }
-
-    func onAction(_ handler: @escaping (String, [String], String) -> Void) {
-        actionHandler = handler
-        observe(Note.extAction) { [weak self] in
-            guard let self, let msg = self.readMessage() else { return }
-            let id = msg.actionID ?? ""
-            let files = msg.filePaths ?? []
-            let trigger = msg.trigger ?? ""
-            guard !id.isEmpty, !files.isEmpty else { return }
-            self.actionHandler?(id, files, trigger)
-        }
-    }
-
-    // MARK: - CFNotificationCenter primitives
-
-    private func post(_ name: String) {
-        CFNotificationCenterPostNotification(
-            center,
-            CFNotificationName(rawValue: name as CFString),
-            nil,
-            nil,
-            true
+            trigger: trigger,
+            timestamp: Date()
         )
-    }
-
-    private func observe(_ name: String, handler: @escaping () -> Void) {
-        handlers[name] = handler
-        observedNames.append(name)
-        CFNotificationCenterAddObserver(
-            center,
-            Unmanaged.passUnretained(self).toOpaque(),
-            { _, observer, notificationName, _, _ in
-                guard let observer = observer,
-                      let notificationName = notificationName else { return }
-                let ipc = Unmanaged<AppExIPC>.fromOpaque(observer).takeUnretainedValue()
-                let nameString = notificationName.rawValue as String
-                DispatchQueue.main.async {
-                    ipc.handlers[nameString]?()
-                }
-            },
-            name as CFString,
-            nil,
-            .deliverImmediately
-        )
-    }
-
-    // MARK: - File-based payload
-
-    private func writeMessage(_ msg: IPCMessage) {
         queue.sync {
-            guard let data = try? JSONEncoder().encode(msg) else { return }
-            try? data.write(to: syncFile, options: .atomic)
+            guard let data = try? JSONEncoder().encode(payload) else { return }
+            try? data.write(to: actionFile, options: .atomic)
         }
     }
 
-    private func readMessage() -> IPCMessage? {
+    /// Main app polls for pending action requests.
+    /// Returns the payload and atomically deletes the file so it is not processed twice.
+    func pollAction() -> ActionPayload? {
         queue.sync {
-            guard let data = try? Data(contentsOf: syncFile),
-                  let msg = try? JSONDecoder().decode(IPCMessage.self, from: data)
+            guard let data = try? Data(contentsOf: actionFile),
+                  let payload = try? JSONDecoder().decode(ActionPayload.self, from: data)
             else { return nil }
-            return msg
+
+            // Delete after reading to prevent duplicate dispatch
+            try? FileManager.default.removeItem(at: actionFile)
+            return payload
+        }
+    }
+
+    /// Legacy helper — same as pollAction for cleaner call sites.
+    func clearAction() {
+        queue.sync {
+            try? FileManager.default.removeItem(at: actionFile)
         }
     }
 }

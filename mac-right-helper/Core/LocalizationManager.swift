@@ -100,6 +100,10 @@ class LocalizationManager {
         "disconnected": [.chinese: "等待连接", .english: "Waiting"],
         "granted": [.chinese: "已授权", .english: "Granted"],
         "notGranted": [.chinese: "未授权", .english: "Not Granted"],
+        "notEnabled": [.chinese: "未启用", .english: "Not Enabled"],
+        "launchHostApp": [.chinese: "启动右键助手", .english: "Launch Right Click Helper"],
+        "openExtensionSettings": [.chinese: "去系统设置开启", .english: "Open System Settings"],
+        "extensionNotEnabledHint": [.chinese: "Finder 右键扩展未在系统设置中启用，右键菜单将不会显示。", .english: "Finder extension is not enabled in System Settings. Right-click menu will not appear."],
 
         // Groups
         "groupFile": [.chinese: "文件", .english: "File"],

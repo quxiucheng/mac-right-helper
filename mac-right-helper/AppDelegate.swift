@@ -5,8 +5,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var mainPanelController: MainPanelController?
     private let ipc = AppExIPC.shared
     private(set) var extensionRunning = false
-    private var heartbeatTimer: Timer?
     var statusItem: NSStatusItem? { statusBarController?.statusItem }
+
+    private var actionPollTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if !ConfigManager.shared.config.settings.hideStatusBarIcon {
@@ -14,9 +15,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         checkPermissions()
 
-        // Setup IPC with Finder Sync Extension
-        setupIPC()
         syncActionsToExtension()
+        startPollingActions()
 
         NotificationCenter.default.addObserver(
             self,
@@ -31,25 +31,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Finder Sync IPC
+    // MARK: - Finder Sync Action Polling
 
-    private func setupIPC() {
-        // Extension heartbeat — confirms it is alive
-        ipc.onHeartbeat { [weak self] in
-            self?.extensionRunning = true
-            self?.syncActionsToExtension()
-            self?.mainPanelController?.refreshStatus()
-            self?.heartbeatTimer?.invalidate()
-            self?.heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
-                self?.extensionRunning = false
-                self?.mainPanelController?.refreshStatus()
+    private func startPollingActions() {
+        actionPollTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            if let payload = self.ipc.pollAction() {
+                Task {
+                    await ActionDispatcher.dispatch(actionID: payload.actionID, filePaths: payload.filePaths)
+                }
             }
-        }
-
-        // Extension triggers an action on selected files
-        ipc.onAction { actionID, filePaths, _ in
-            Task {
-                await ActionDispatcher.dispatch(actionID: actionID, filePaths: filePaths)
+            // Refresh extension running status based on config file freshness
+            let wasRunning = self.extensionRunning
+            self.extensionRunning = self.ipc.readConfig() != nil
+            if wasRunning != self.extensionRunning {
+                self.mainPanelController?.refreshStatus()
             }
         }
     }
@@ -199,7 +195,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        ipc.sendQuit()
+        actionPollTimer?.invalidate()
     }
 
     // MARK: - NSServices Support

@@ -3,7 +3,7 @@ import Cocoa
 class MainPanelController: NSWindowController {
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 400),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -27,9 +27,11 @@ class MainPanelViewController: NSViewController {
     private let axStatus = NSTextField(labelWithString: "")
     private let extStatus = NSTextField(labelWithString: "")
     private let actionCount = NSTextField(labelWithString: "")
+    private let extWarningLabel = NSTextField(labelWithString: "")
+    private var extEnableBtn: NSButton?
 
     override func loadView() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 420, height: 360))
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 420, height: 400))
     }
 
     override func viewDidLoad() {
@@ -85,6 +87,20 @@ class MainPanelViewController: NSViewController {
         countRow.alignment = .centerY
         actionCount.font = NSFont.boldSystemFont(ofSize: 13)
 
+        // Extension warning section (shown when extension is not enabled)
+        extWarningLabel.font = NSFont.systemFont(ofSize: 11)
+        extWarningLabel.textColor = .systemOrange
+        extWarningLabel.isHidden = true
+
+        let extBtn = NSButton(title: L("openExtensionSettings"), target: self, action: #selector(openExtensionSettings))
+        extBtn.isHidden = true
+        self.extEnableBtn = extBtn
+
+        let extWarningStack = NSStackView(views: [extWarningLabel, extBtn])
+        extWarningStack.orientation = .vertical
+        extWarningStack.spacing = 4
+        extWarningStack.alignment = .leading
+
         let reloadBtn = NSButton(title: L("reloadServices"), target: self, action: #selector(reloadServices))
         let axBtn = NSButton(title: L("requestAccessibility"), target: self, action: #selector(requestAccessibility))
         let prefsBtn = NSButton(title: L("preferences"), target: self, action: #selector(openPreferences))
@@ -99,6 +115,7 @@ class MainPanelViewController: NSViewController {
             statusStack,
             separator2,
             countRow,
+            extWarningStack,
             buttonRow
         ])
         contentStack.orientation = .vertical
@@ -128,11 +145,40 @@ class MainPanelViewController: NSViewController {
         axStatus.textColor = axGranted ? .systemGreen : .systemRed
 
         let extRunning = (NSApp.delegate as? AppDelegate)?.extensionRunning ?? false
-        extStatus.stringValue = extRunning ? L("connected") : L("disconnected")
-        extStatus.textColor = extRunning ? .systemGreen : .secondaryLabelColor
+        let extEnabled = Self.isFinderExtensionEnabled()
+        if extEnabled {
+            extStatus.stringValue = extRunning ? L("connected") : L("disconnected")
+            extStatus.textColor = extRunning ? .systemGreen : .secondaryLabelColor
+        } else {
+            extStatus.stringValue = L("notEnabled")
+            extStatus.textColor = .systemOrange
+        }
+
+        extWarningLabel.stringValue = L("extensionNotEnabledHint")
+        extWarningLabel.isHidden = extEnabled
+        extEnableBtn?.isHidden = extEnabled
 
         let count = ConfigManager.shared.config.builtinItems.filter { $0.value.enabled }.count
         actionCount.stringValue = String(count)
+    }
+
+    /// Check whether the Finder Sync Extension is registered and enabled via pluginkit.
+    private static func isFinderExtensionEnabled() -> Bool {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/pluginkit")
+        task.arguments = ["-m", "-i", "com.example.mac-right-helper.FinderSyncExt"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            guard let output = String(data: data, encoding: .utf8) else { return false }
+            // pluginkit output contains a '+' prefix when the extension is enabled
+            return output.contains("+")
+        } catch {
+            return false
+        }
     }
 
     override func viewWillAppear() {
@@ -151,6 +197,11 @@ class MainPanelViewController: NSViewController {
 
     @objc private func openPreferences() {
         (NSApp.delegate as? AppDelegate)?.showPreferences()
+    }
+
+    @objc private func openExtensionSettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.extensions?Finder")!
+        NSWorkspace.shared.open(url)
     }
 
     private static func sectionHeader(_ title: String) -> NSTextField {
