@@ -182,8 +182,16 @@ class MainPanelViewController: NSViewController {
     }
 
     @objc private func openExtensionSettings() {
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.extensions?Finder")!
-        NSWorkspace.shared.open(url)
+        // Try to open System Settings directly to the Extensions section.
+        // macOS Ventura+ uses a different URL scheme; fall back to generic settings.
+        let urls = [
+            URL(string: "x-apple.systempreferences:com.apple.preference.extensions?Finder")!,
+            URL(string: "x-apple.systempreferences:com.apple.preference.extensions")!,
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy")!,
+        ]
+        for url in urls {
+            if NSWorkspace.shared.open(url) { break }
+        }
     }
 
     private static func sectionHeader(_ title: String) -> NSTextField {

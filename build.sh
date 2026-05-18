@@ -90,8 +90,11 @@ echo "Building Finder Sync Extension..."
 EXT_BINARY="${EXT_BUNDLE}/Contents/MacOS/FinderSyncExt"
 TMP_DIR=$(mktemp -d)
 
-# Extension sources: extension file + shared IPC + shared types
+# Extension sources: main stub + extension entry + shared IPC + shared types
 EXT_SOURCES=()
+if [ -f "${EXT_SRC_DIR}/main.swift" ]; then
+    EXT_SOURCES+=("${EXT_SRC_DIR}/main.swift")
+fi
 if [ -f "${EXT_SRC_DIR}/FinderSyncExt.swift" ]; then
     EXT_SOURCES+=("${EXT_SRC_DIR}/FinderSyncExt.swift")
 fi
