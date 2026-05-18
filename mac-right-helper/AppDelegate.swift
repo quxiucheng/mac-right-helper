@@ -4,10 +4,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
     private(set) var mainPanelController: MainPanelController?
     private let ipc = AppExIPC.shared
-    private(set) var extensionRunning = false
+    private let messager = Messager.shared
     var statusItem: NSStatusItem? { statusBarController?.statusItem }
-
-    private var actionPollTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if !ConfigManager.shared.config.settings.hideStatusBarIcon {
@@ -16,8 +14,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ExtensionManager.registerExtension()
         checkPermissions()
 
+        setupMessager()
         syncActionsToExtension()
-        startPollingActions()
+        notifyExtensionRunning()
 
         NotificationCenter.default.addObserver(
             self,
@@ -32,26 +31,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Finder Sync Action Polling
+    // MARK: - Messager (Darwin Notifications)
 
-    private func startPollingActions() {
-        actionPollTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            if let payload = self.ipc.pollAction() {
-                Task {
-                    await ActionDispatcher.dispatch(actionID: payload.actionID, filePaths: payload.filePaths)
-                }
-            }
-            // Refresh extension running status based on config file freshness
-            let wasRunning = self.extensionRunning
-            self.extensionRunning = self.ipc.readConfig() != nil
-            if wasRunning != self.extensionRunning {
-                self.mainPanelController?.refreshStatus()
+    private func setupMessager() {
+        messager.on(name: MsgKey.fromFinder) { [weak self] payload in
+            Task { @MainActor in
+                await self?.handleFinderMessage(payload)
             }
         }
     }
 
-    /// Send current enabled action list to Finder Sync Extension
+    @MainActor
+    private func handleFinderMessage(_ payload: MessagePayload) async {
+        switch payload.action {
+        case "heartbeat":
+            // Extension just started or is confirming it is alive.
+            mainPanelController?.refreshStatus()
+        case "actioning":
+            await ActionDispatcher.dispatch(actionID: payload.rid, filePaths: payload.target)
+        default:
+            break
+        }
+    }
+
+    /// Notify the extension that the host app is running and supply monitor directories.
+    private func notifyExtensionRunning() {
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
+        let monitorDirs = [
+            "/",
+            homeDir,
+            "\(homeDir)/Desktop",
+            "\(homeDir)/Documents",
+            "\(homeDir)/Downloads"
+        ]
+        messager.sendMessage(
+            name: MsgKey.running,
+            data: MessagePayload(action: "running", target: monitorDirs)
+        )
+    }
+
+    // MARK: - Config sync
+
+    /// Send current enabled action list to Finder Sync Extension and notify it to refresh.
     func syncActionsToExtension() {
         let config = ConfigManager.shared.config
         var actions: [ActionItem] = []
@@ -171,6 +192,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func configChanged() {
         syncActionsToExtension()
+        notifyExtensionRunning()
         let shouldHide = ConfigManager.shared.config.settings.hideStatusBarIcon
         if shouldHide {
             statusBarController = nil
@@ -196,7 +218,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        actionPollTimer?.invalidate()
+        messager.sendMessage(name: MsgKey.quit, data: MessagePayload(action: "quit"))
     }
 
     // MARK: - NSServices Support

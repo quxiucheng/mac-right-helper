@@ -32,9 +32,9 @@ struct ActionItem: Codable {
 
 /// Key constants shared between app and extension
 enum MsgKey {
-    static let fromFinder = "RClickHelperFromFinder"
-    static let running = "RClickHelperRunning"
-    static let quit = "RClickHelperQuit"
+    static let fromFinder = "RightHelperFromFinder"
+    static let running = "RightHelperRunning"
+    static let quit = "RightHelperQuit"
 }
 
 /// IPC messenger using DistributedNotificationCenter

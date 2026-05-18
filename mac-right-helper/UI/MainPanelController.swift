@@ -144,11 +144,12 @@ class MainPanelViewController: NSViewController {
         axStatus.stringValue = axGranted ? L("granted") : L("notGranted")
         axStatus.textColor = axGranted ? .systemGreen : .systemRed
 
-        let extRunning = (NSApp.delegate as? AppDelegate)?.extensionRunning ?? false
         let extEnabled = ExtensionManager.isExtensionEnabled()
+        // Check whether the extension has recently read our config file.
+        let extConnected = AppExIPC.shared.readConfig() != nil
         if extEnabled {
-            extStatus.stringValue = extRunning ? L("connected") : L("disconnected")
-            extStatus.textColor = extRunning ? .systemGreen : .secondaryLabelColor
+            extStatus.stringValue = extConnected ? L("connected") : L("disconnected")
+            extStatus.textColor = extConnected ? .systemGreen : .secondaryLabelColor
         } else {
             extStatus.stringValue = L("notEnabled")
             extStatus.textColor = .systemOrange

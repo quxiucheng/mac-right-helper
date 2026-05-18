@@ -31,6 +31,9 @@ class FinderSyncExt: FIFinderSync {
     private var menuActions: [ActionItem] = []
     private var currentMenuKind: FIMenuKind = .contextualMenuForContainer
     private let ipc = AppExIPC.shared
+    private let messager = Messager.shared
+
+    private var isHostAppRunning = false
 
     // MARK: - Static fallback actions shown when main app is not running
 
@@ -49,8 +52,38 @@ class FinderSyncExt: FIFinderSync {
 
     override init() {
         super.init()
-        // Do not monitor root directory; config file will supply dirs when app is running.
         FIFinderSyncController.default().directoryURLs = []
+        setupMessager()
+        heartBeat()
+    }
+
+    private func setupMessager() {
+        messager.on(name: MsgKey.running) { [weak self] payload in
+            self?.isHostAppRunning = true
+            if !payload.target.isEmpty {
+                let urls = Set(payload.target.map { URL(fileURLWithPath: $0) })
+                FIFinderSyncController.default().directoryURLs = urls
+            }
+            self?.refreshConfig()
+        }
+
+        messager.on(name: MsgKey.quit) { [weak self] _ in
+            self?.isHostAppRunning = false
+            FIFinderSyncController.default().directoryURLs = []
+        }
+    }
+
+    private func heartBeat() {
+        messager.sendMessage(
+            name: MsgKey.fromFinder,
+            data: MessagePayload(action: "heartbeat")
+        )
+    }
+
+    private func refreshConfig() {
+        if let config = ipc.readConfig() {
+            menuActions = config.actions
+        }
     }
 
     // MARK: - FIFinderSync
@@ -69,21 +102,12 @@ class FinderSyncExt: FIFinderSync {
         currentMenuKind = menuKind
         let menu = NSMenu(title: "RightHelper")
 
-        // Refresh config directly from shared file every time the menu is built.
-        if let config = ipc.readConfig() {
-            menuActions = config.actions
-            if !config.monitorDirs.isEmpty {
-                let urls = Set(config.monitorDirs.map { URL(fileURLWithPath: $0) })
-                FIFinderSyncController.default().directoryURLs = urls
-            }
-        } else {
-            menuActions = []
-        }
+        // Always try to refresh config from disk when menu opens.
+        refreshConfig()
 
         switch menuKind {
         case .contextualMenuForItems, .contextualMenuForContainer, .toolbarItemMenu:
-            let isHostRunning = ipc.readConfig() != nil
-            if isHostRunning {
+            if isHostAppRunning {
                 buildMenu(menu, from: menuActions)
             } else {
                 buildFallbackMenu(menu)
@@ -114,7 +138,6 @@ class FinderSyncExt: FIFinderSync {
     }
 
     private func buildFallbackMenu(_ menu: NSMenu) {
-        // Launch host app
         let launchItem = NSMenuItem(
             title: extL("launchHostApp"),
             action: #selector(launchHostApp),
@@ -124,8 +147,6 @@ class FinderSyncExt: FIFinderSync {
         launchItem.image = NSImage(systemSymbolName: "play.circle", accessibilityDescription: nil)
         menu.addItem(launchItem)
         menu.addItem(NSMenuItem.separator())
-
-        // Static actions
         buildMenu(menu, from: fallbackActions)
     }
 
@@ -178,34 +199,53 @@ class FinderSyncExt: FIFinderSync {
     @MainActor
     @objc private func executeAction(_ sender: NSMenuItem) {
         guard let rid = rid(for: sender.tag) else { return }
-        let targets = getSelectedPaths()
+        let targets = getSelectedPaths(for: currentMenuKind)
         guard !targets.isEmpty else { return }
 
         var trigger = "ctx-items"
         if currentMenuKind == .contextualMenuForContainer { trigger = "ctx-container" }
         else if currentMenuKind == .toolbarItemMenu { trigger = "toolbar" }
 
-        ipc.writeAction(actionID: rid, filePaths: targets, trigger: trigger)
+        messager.sendMessage(
+            name: MsgKey.fromFinder,
+            data: MessagePayload(action: "actioning", target: targets, rid: rid, trigger: trigger)
+        )
     }
 
     @MainActor
     @objc private func launchHostApp() {
-        // Try to open the main app via its bundle identifier
         let bundleID = "com.example.mac-right-helper"
         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
             NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
         }
     }
 
-    private func getSelectedPaths() -> [String] {
+    /// Returns selected paths, respecting the menu kind so that
+    /// blank-area right-clicks (contextualMenuForContainer) resolve
+    /// to the current directory via `targetedURL()`.
+    private func getSelectedPaths(for kind: FIMenuKind) -> [String] {
         var paths: [String] = []
 
-        if let urls = FIFinderSyncController.default().selectedItemURLs() {
-            paths = urls.map { $0.path }
-        }
-        if paths.isEmpty,
-           let url = FIFinderSyncController.default().targetedURL() {
-            paths = [url.path]
+        switch kind {
+        case .contextualMenuForItems:
+            if let urls = FIFinderSyncController.default().selectedItemURLs() {
+                paths = urls.map { $0.path }
+            }
+        case .contextualMenuForContainer:
+            if let url = FIFinderSyncController.default().targetedURL() {
+                paths = [url.path]
+            }
+        case .toolbarItemMenu:
+            if let urls = FIFinderSyncController.default().selectedItemURLs() {
+                paths = urls.map { $0.path }
+            }
+            if paths.isEmpty, let url = FIFinderSyncController.default().targetedURL() {
+                paths = [url.path]
+            }
+        default:
+            if let url = FIFinderSyncController.default().targetedURL() {
+                paths = [url.path]
+            }
         }
         return paths
     }
